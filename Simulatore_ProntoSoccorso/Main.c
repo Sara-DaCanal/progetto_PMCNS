@@ -10,8 +10,8 @@
 #include <math.h>
 #include "libreriaRand/rngs.h" //spostare le librerie
 #define START 0.0
-#define STOP 20000.0
-#define INF   (10.0 * STOP)
+#define STOP 2000.0
+#define INF   (100.0 * STOP)
 #define SEED 123456789
 #define SERVERSTRIAGE 4
 #define SERVERSRED 3
@@ -60,7 +60,7 @@ double Min(double a, multiserver triage[], multiserver rossa[])
  * return the smaller of a, b
  * ------------------------------
  */
-{ 
+{
     double min=a;
     for(int i=0;i<SERVERSTRIAGE;i++){
         if(triage[i].service < min)
@@ -68,12 +68,9 @@ double Min(double a, multiserver triage[], multiserver rossa[])
     }
     int j=-1;
     for(int i=0;i<SERVERSRED;i++){
-        if(rossa[i].service < min){
+        if(rossa[i].service < min)
             min = rossa[i].service;
-            j=i;
-        }
     }
-    printf("J è:%d\n", j);
     return min;
 }
 double getArrival(){
@@ -83,40 +80,35 @@ double getArrival(){
 }
 
  int NextEvent(multiserver event[], int length)
-/* ---------------------------------------
- * return the index of the next event type
- * ---------------------------------------
+/* ----------------------------------------------------------------
+ * return the index of the next completion in the given multiserver
+ * ----------------------------------------------------------------
  */
 {
-  int e = 0;                                      
-  int i = 1;
-                    
-  while (i < length) {         /* now, check the others to find which  */
-                         /* event type is most imminent          */
-    if ((event[i].occupied == 1) && (event[i].service < event[e].service))
-      e = i;
-    i++; 
-  }
-  if(event[e].occupied==0){
-    printf("NextEvent: -1\n");
-    return -1;
-  }
-printf("NextEvent: %d\n", e);
-  return (e);
+    int e = 0;                                      
+    int i = 1;
+    while (i < length) {        
+        if ((event[i].service < event[e].service))
+            e = i;
+        i++; 
+    }
+     if(event[e].occupied==0){
+        return -1;
+    }
+    return (e);
 }
 
 
  int FindOne(multiserver event[])
-/* -----------------------------------------------------
- * return the index of the available server idle longest
- * -----------------------------------------------------
+/* ----------------------------------------------
+ * return the index of the first available server
+ * ----------------------------------------------
  */
 {
     int s;
     int i = 0;
-
-     while (event[i].occupied == 1)       /* find the index of the first available */
-        i++;                        /* (idle) server                         */
+    while (event[i].occupied == 1)       /* find the index of the first available */
+        i++;                             /* (idle) server                         */
     s = i;
     return (s);
 }
@@ -167,7 +159,13 @@ int main(){
 
     while(t.arrival<STOP || numeroCodaTriage>0 || numeroCodaRossa>0)
     {
+        if(t.completionRossa != -1)
+            t.completionRossa = NextEvent(rossa, SERVERSRED);
+        if(t.completionTriage != -1)
+            t.completionTriage = NextEvent(triage, SERVERSTRIAGE);
         t.next=Min(t.arrival, triage, rossa);    //probabilmente non serve poi vediamo
+        if(t.next==INF)
+            break;
         t.current=t.next;
         if(t.current==t.arrival){
             numeroCodaTriage++;
@@ -177,7 +175,7 @@ int main(){
                 t.last=t.current;
                 t.arrival=INF;
             }
-            if(numeroCodaTriage<=SERVERSTRIAGE){
+            if(numeroCodaTriage<=SERVERSTRIAGE && numeroCodaTriage>0){
                 int index = FindOne(triage); //trovare un server libero
                 triage[index].service=t.current+getServiceTriage();
                 triage[index].occupied=1;
@@ -196,7 +194,7 @@ int main(){
                     triage[t.completionTriage].service=INF;
                     triage[t.completionTriage].occupied=0;
                }
-               if(numeroCodaTriage > 0)
+               if(numeroCodaTriage>0)
                     t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
                 else
                     t.completionTriage=-1;
@@ -218,7 +216,6 @@ int main(){
                         double p = Uniform(0,100);
                         if(p<5.2){              //costante da decidere
                             numeroCodaRossa--;
-                            printf("1 Killed!\n");
                         }
                     }
                 break;
@@ -230,30 +227,23 @@ int main(){
                }
                else if(t.current==rossa[t.completionRossa].service){
                     numeroCodaRossa--;
-                    if(numeroCodaRossa-SERVERSRED>=0)
-                    {
-                    rossa[t.completionRossa].service=t.current+getServiceRossa();
-                    rossa[t.completionRossa].occupied=1;
-                    
-               }
-               else{
-                    rossa[t.completionRossa].service=INF;
-                    rossa[t.completionRossa].occupied=0;
-               }
+                    if(numeroCodaRossa-SERVERSRED>=0){
+                        rossa[t.completionRossa].service=t.current+getServiceRossa();
+                        rossa[t.completionRossa].occupied=1;
+                    }
+                    else{
+                        rossa[t.completionRossa].service=INF;
+                        rossa[t.completionRossa].occupied=0;
+                    }
                if(numeroCodaRossa > 0)
                     t.completionRossa=NextEvent(rossa, SERVERSRED);
                 else
                     t.completionRossa=-1;
-
                }
                else{
                 //eventi futuri dei completamenti degli altri reparti
                } 
-               t.completionRossa=NextEvent(rossa, SERVERSRED);
-               t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
-               //printf("Tempo corrente:%f,\ttempo arrivo:%f\tcompl triage:%f,\tcompl rossa:%f\n", t.current, t.arrival, triage[t.completionTriage].service, rossa[t.completionRossa].service);      
-    }
-    printf("Rossi: %d\n",counter);
+            }
     return 0;
     }
 
