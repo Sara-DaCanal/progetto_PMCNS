@@ -14,13 +14,14 @@
 #define INF   (100.0 * STOP)
 #define SEED 123456789
 #define SERVERSTRIAGE 4
+#define SERVERSRED 3
 
 double arrival;
 
 typedef struct event{
     double arrival;
     int completionTriage; //indice del primo server che finisce
-
+    int completionRossa;
     double current;
     double next;
     double last;
@@ -67,11 +68,11 @@ double Min(double a, double c)
 }
 double getArrival(){
     SelectStream(0);
-    arrival+=Exponential(4.0);
+    arrival+=Exponential(1/0.09);
     return arrival;
 }
 
- int NextEvent(multiserver event[SERVERSTRIAGE])
+ int NextEvent(multiserver event[], int length)
 /* ---------------------------------------
  * return the index of the next event type
  * ---------------------------------------
@@ -81,7 +82,7 @@ double getArrival(){
   int e = 0;                                      
   int i = 1;
                     
-  while (i < SERVERSTRIAGE) {         /* now, check the others to find which  */
+  while (i < length) {         /* now, check the others to find which  */
                          /* event type is most imminent          */
     if ((event[i].occupied == 1) && (event[i].service < event[e].service))
       e = i;
@@ -94,7 +95,7 @@ double getArrival(){
 }
 
 
- int FindOne(multiserver event[SERVERSTRIAGE])
+ int FindOne(multiserver event[])
 /* -----------------------------------------------------
  * return the index of the available server idle longest
  * -----------------------------------------------------
@@ -123,7 +124,11 @@ color assignCode(){
 }
 double getServiceTriage(){
   SelectStream(1);
-  return Exponential(6.0);
+  return Exponential(24);                  //La media del servizio è di sei minuti, quindi ogni server ha media 4*6=24
+}
+double getServiceRossa(){
+    SelectStream(3);
+    return Exponential(225.5);
 }
 int main(){
     arrival=START;
@@ -132,14 +137,20 @@ int main(){
     PlantSeeds(SEED);
     event t;
     multiserver triage[SERVERSTRIAGE];      //inizializzare array per salvare il multiserver
+    multiserver rossa[SERVERSRED];
 
     for(int i=0; i<SERVERSTRIAGE; i++){ 
         triage[i].occupied=0;
         triage[i].service=INF;
     }
+    for(int i=0;i<SERVERSRED; i++){
+        rossa[i].occupied=0;
+        rossa[i].service=INF;
+    }
     t.arrival=getArrival();
     printf("primo arrivo: %f\n",t.arrival);
     t.completionTriage=-1;
+    t.completionRossa=-1;
     t.current=START;
     t.last=START;
 
@@ -151,6 +162,7 @@ int main(){
         else
             t.next=Min(t.arrival,triage[t.completionTriage].service);
         t.current=t.next;
+        printf("Tempo:%f\n", t.current);
         if(t.current==t.arrival){
             numeroCodaTriage++;
             t.arrival=getArrival();
@@ -164,13 +176,13 @@ int main(){
                 int index = FindOne(triage); //trovare un server libero
                 triage[index].service=t.current+getServiceTriage();
                 triage[index].occupied=1;
-                t.completionTriage=NextEvent(triage);
+                t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
             }
         }
         else if(t.current==triage[t.completionTriage].service){
                printf("completamento %d\n",t.completionTriage);
                numeroCodaTriage--;
-               if(numeroCodaTriage-SERVERSTRIAGE>0)
+               if(numeroCodaTriage-SERVERSTRIAGE>=0)
                {
                     triage[t.completionTriage].service=t.current+getServiceTriage();
                     triage[t.completionTriage].occupied=1;
@@ -181,7 +193,7 @@ int main(){
                     triage[t.completionTriage].occupied=0;
                }
                if(numeroCodaTriage > 0)
-                    t.completionTriage=NextEvent(triage);
+                    t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
                 else
                     t.completionTriage=-1;
                printf("Il prossimo è: %d\n", t.completionTriage);
@@ -190,7 +202,13 @@ int main(){
                switch (code)
                {
                case red:
-                /* code */
+                    numeroCodaRossa++;
+                    if(numeroCodaRossa<=SERVERSRED){
+                        int index=FindOne(rossa);
+                        rossa[index].service = t.current+getServiceRossa();
+                        rossa[index].occupied = 1;
+                        t.completionRossa = NextEvent(rossa, SERVERSRED);
+                    }
                 break;
                default:
                 break;
