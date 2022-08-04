@@ -10,8 +10,8 @@
 #include <math.h>
 #include "libreriaRand/rngs.h" //spostare le librerie
 #define START 0.0
-#define STOP 2000.0
-#define INF   (100.0 * STOP)
+#define STOP 20000.0
+#define INF   (10.0 * STOP)
 #define SEED 123456789
 #define SERVERSTRIAGE 4
 #define SERVERSRED 3
@@ -55,16 +55,26 @@ double Uniform(double a, double b)
 {
   return (a + (b - a) * Random());
 }
-double Min(double a, double c)
+double Min(double a, multiserver triage[], multiserver rossa[])
 /* ------------------------------
  * return the smaller of a, b
  * ------------------------------
  */
 { 
-  if (a < c)
-    return (a);
-  else
-    return (c);
+    double min=a;
+    for(int i=0;i<SERVERSTRIAGE;i++){
+        if(triage[i].service < min)
+            min = triage[i].service;
+    }
+    int j=-1;
+    for(int i=0;i<SERVERSRED;i++){
+        if(rossa[i].service < min){
+            min = rossa[i].service;
+            j=i;
+        }
+    }
+    printf("J è:%d\n", j);
+    return min;
 }
 double getArrival(){
     SelectStream(0);
@@ -78,7 +88,6 @@ double getArrival(){
  * ---------------------------------------
  */
 {
-    printf("Calcolo nextEvent\n");
   int e = 0;                                      
   int i = 1;
                     
@@ -87,10 +96,12 @@ double getArrival(){
     if ((event[i].occupied == 1) && (event[i].service < event[e].service))
       e = i;
     i++; 
-    printf("Event e: %d\n", e);
   }
-  if(event[e].occupied==0)
+  if(event[e].occupied==0){
+    printf("NextEvent: -1\n");
     return -1;
+  }
+printf("NextEvent: %d\n", e);
   return (e);
 }
 
@@ -113,7 +124,7 @@ double getArrival(){
 color assignCode(){
     SelectStream(2);
     double x = Uniform(0,100);
-    if (x<1.04)
+    if (x<10.04)
         return red;
     else if (x<19.44)
         return yellow;
@@ -132,6 +143,7 @@ double getServiceRossa(){
 }
 int main(){
     arrival=START;
+    int counter = 0;
     int numeroCodaTriage=0;
     int numeroCodaRossa=0;
     PlantSeeds(SEED);
@@ -148,27 +160,20 @@ int main(){
         rossa[i].service=INF;
     }
     t.arrival=getArrival();
-    printf("primo arrivo: %f\n",t.arrival);
     t.completionTriage=-1;
     t.completionRossa=-1;
     t.current=START;
-    t.last=START;
+    t.last=START;   //per statistiche non serve
 
-    while(t.arrival<STOP || numeroCodaTriage>0)
+    while(t.arrival<STOP || numeroCodaTriage>0 || numeroCodaRossa>0)
     {
-        
-        if(t.arrival!=INF && t.completionTriage==-1)
-            t.next=t.arrival;
-        else
-            t.next=Min(t.arrival,triage[t.completionTriage].service);
+        t.next=Min(t.arrival, triage, rossa);    //probabilmente non serve poi vediamo
         t.current=t.next;
-        printf("Tempo:%f\n", t.current);
         if(t.current==t.arrival){
             numeroCodaTriage++;
             t.arrival=getArrival();
             if(t.arrival>STOP)
             {
-                printf("HERE\n");
                 t.last=t.current;
                 t.arrival=INF;
             }
@@ -180,7 +185,6 @@ int main(){
             }
         }
         else if(t.current==triage[t.completionTriage].service){
-               printf("completamento %d\n",t.completionTriage);
                numeroCodaTriage--;
                if(numeroCodaTriage-SERVERSTRIAGE>=0)
                {
@@ -196,30 +200,60 @@ int main(){
                     t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
                 else
                     t.completionTriage=-1;
-               printf("Il prossimo è: %d\n", t.completionTriage);
                color code = assignCode();
-               //printf("%d\n", code);
                switch (code)
                {
-               case red:
+                case red:
                     numeroCodaRossa++;
+                    counter++;
                     if(numeroCodaRossa<=SERVERSRED){
                         int index=FindOne(rossa);
                         rossa[index].service = t.current+getServiceRossa();
                         rossa[index].occupied = 1;
                         t.completionRossa = NextEvent(rossa, SERVERSRED);
                     }
+                    /*Probabilità muoia qualcuno*/
+                    else{
+                        SelectStream(4);
+                        double p = Uniform(0,100);
+                        if(p<5.2){              //costante da decidere
+                            numeroCodaRossa--;
+                            printf("1 Killed!\n");
+                        }
+                    }
                 break;
+                case yellow:
+                    break;
                default:
                 break;
                }
                }
+               else if(t.current==rossa[t.completionRossa].service){
+                    numeroCodaRossa--;
+                    if(numeroCodaRossa-SERVERSRED>=0)
+                    {
+                    rossa[t.completionRossa].service=t.current+getServiceRossa();
+                    rossa[t.completionRossa].occupied=1;
+                    
+               }
+               else{
+                    rossa[t.completionRossa].service=INF;
+                    rossa[t.completionRossa].occupied=0;
+               }
+               if(numeroCodaRossa > 0)
+                    t.completionRossa=NextEvent(rossa, SERVERSRED);
+                else
+                    t.completionRossa=-1;
+
+               }
                else{
                 //eventi futuri dei completamenti degli altri reparti
-               }   
-               printf("numero persone in coda %d\n",numeroCodaTriage);     
+               } 
+               t.completionRossa=NextEvent(rossa, SERVERSRED);
+               t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
+               //printf("Tempo corrente:%f,\ttempo arrivo:%f\tcompl triage:%f,\tcompl rossa:%f\n", t.current, t.arrival, triage[t.completionTriage].service, rossa[t.completionRossa].service);      
     }
-
+    printf("Rossi: %d\n",counter);
     return 0;
     }
 
