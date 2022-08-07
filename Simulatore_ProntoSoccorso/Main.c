@@ -13,16 +13,25 @@
 #include "libreriaRand/rngs.h" //spostare le librerie
 
 #define START 0.0
-#define STOP 2000.0
+#define STOP 40000.0
 #define INF   (100.0 * STOP)
 #define SEED 123456789
-#define SERVERSTRIAGE 4
+#define SERVERSTRIAGE 3
 #define SERVERSRED 3
 #define SERVERSTRAUMA 3    
-#define SERVERSMEDICAL 3    
-#define SERVERSMINOR 3      
+#define SERVERSMEDICAL 10    
+#define SERVERSMINOR 10    
 
 double arrival; //usata per salvare l'istante del pross
+
+typedef struct area{
+    double node;                    /* time integrated number in the node  */
+    double queue;                   /* time integrated number in the queue */
+    double service;                 /* time integrated number in service   */
+    int index;                      /* numero persone totali servite */
+    double current;
+    int numeroServer;
+} area;
 
 typedef struct event{     
     double arrival;
@@ -62,11 +71,11 @@ paramService triageParams;
 paramService redParams;
 
 void intitParamService(){
-    traumaParams.mean=93.4*SERVERSTRAUMA;
-    medicalParams.mean=165.9*SERVERSMEDICAL;
-    minorParams.mean=105.6*SERVERSMINOR;
-    redParams.mean=225.5*SERVERSRED;
-    triageParams.mean=6*SERVERSTRIAGE;
+    traumaParams.mean=93.4;
+    medicalParams.mean=165.9;
+    minorParams.mean=105.6;
+    redParams.mean=225.5;
+    triageParams.mean=6;
 
     triageParams.stream=0;
     redParams.stream=1;
@@ -195,9 +204,52 @@ double getService(paramService service){
     SelectStream(service.stream);
     return Exponential(service.mean);
 }
-
-
+void initStatistiche(area * appoggio,int dim)
+{
+    appoggio->node=0.0;
+    appoggio->queue=0.0;
+    appoggio->service=0.0;
+    appoggio->index=0;
+    appoggio->numeroServer=dim;
+}
+void stampaStatistiche(area appoggio){
+    printf("\nfor %ld jobs\n", appoggio.index);
+   // printf("   average interarrival time = %6.2f\n", t.last / appoggio.index);
+    printf("   average wait ............ = %6.2f\n", appoggio.node / appoggio.index);
+    printf("   average delay ........... = %6.2f\n", appoggio.queue / appoggio.index);
+    printf("   average service time .... = %6.2f\n", appoggio.service / appoggio.index);
+    printf("   average # in the node ... = %6.2f\n", appoggio.node / appoggio.current);
+    printf("   average # in the queue .. = %6.2f\n", appoggio.queue / appoggio.current);
+    printf("   statistiche.current= %6.2f\n   ",appoggio.current);
+    printf("   utilization ............. = %6.2f\n", (appoggio.service/appoggio.numeroServer) / appoggio.current);
+}
+void incrementoStatistiche(area *appoggio,int num,double current,double next){
+    appoggio->node    += (next - current) * num;
+    if(num>appoggio->numeroServer)
+        appoggio->service += (next - current)*appoggio->numeroServer;
+    else
+        appoggio->service += (next - current)*num;
+    appoggio->current=current;
+    if(num>appoggio->numeroServer-1)
+        appoggio->queue   += (next - current) * (num - appoggio->numeroServer);
+}
 int main(){
+
+    area statisticheTriage;
+    area statisticheRossa;
+    area statisticheTrauma;
+    area statisticheMedical;
+    area statisticheMinor;
+
+
+    initStatistiche(&statisticheTriage,SERVERSTRIAGE);
+    initStatistiche(&statisticheRossa,SERVERSRED);
+    initStatistiche(&statisticheTrauma,SERVERSTRAUMA);
+    initStatistiche(&statisticheMedical,SERVERSMEDICAL);
+    initStatistiche(&statisticheMinor,SERVERSMINOR);
+
+
+
     intitParamService();
     arrival=START;
     int counter = 0;
@@ -264,23 +316,28 @@ int main(){
 
     while(t.arrival<STOP || numeroCodaTriage>0 || numeroCodaRossa>0 || numTraumiGiallo+numTraumiVerde>0 || 
         numMinoreGiallo+numMinoreVerde+numMinoreBianco>0 || numMedicoGiallo+numMedicoVerde>0){
-        /*if(t.completionRossa != -1)           NON CANCELLO FINCHE' NON HO L'OKAY MA NON SERVONO
-            t.completionRossa = NextEvent(rossa, SERVERSRED);
-        if(t.completionTriage != -1)
-            t.completionTriage = NextEvent(triage, SERVERSTRIAGE);
-        if(t.completionTrauma != -1)
-            t.completionTrauma = NextEvent(traumi, SERVERSTRAUMA);
-        if(t.completionMedical != -1)
-            t.completionMedical = NextEvent(medico, SERVERSMEDICAL);
-        if(t.completionMinor != -1)
-            t.completionMinor = NextEvent(minori, SERVERSMINOR);*/
+        
         t.next=Min(t.arrival, triage, rossa, traumi, medico, minori);   
-        //if(t.next >= INF)         STESSA COSA PER QUESTO
-            //break;
+       
+
+        if(numeroCodaTriage>0)  incrementoStatistiche(&statisticheTriage,numeroCodaTriage,t.current,t.next);
+            
+        if(numeroCodaRossa>0)   incrementoStatistiche(&statisticheRossa,numeroCodaRossa,t.current,t.next);
+
+        if(numTraumiGiallo+numTraumiVerde>0)  incrementoStatistiche(&statisticheTrauma,numTraumiGiallo+numTraumiVerde,t.current,t.next);
+
+        if(numMedicoGiallo+numMedicoVerde>0)  incrementoStatistiche(&statisticheMedical,numMedicoGiallo+numMedicoVerde,t.current,t.next);
+
+        if(numMinoreGiallo+numMinoreVerde+numMinoreBianco>0)  incrementoStatistiche(&statisticheMinor,numMinoreGiallo+numMinoreVerde+numMinoreBianco,t.current,t.next);
+
+
+
         t.current=t.next;    //probabilmente non serve poi vediamo
         /* processamento di un arrivo */
         if(t.current==t.arrival){
             numeroCodaTriage++;
+            statisticheTriage.index++;
+
             t.arrival=getArrival();
             if(t.arrival>STOP){
                 t.last=t.current;
@@ -316,6 +373,7 @@ int main(){
                 switch (code){
                 case red:
                     numeroCodaRossa++;
+                    statisticheRossa.index++;
                     if(numeroCodaRossa<=SERVERSRED){
                         int index=FindOne(rossa);
                         rossa[index].service = t.current+getService(redParams);
@@ -336,6 +394,7 @@ int main(){
                     p = Uniform(0,100);
                     if(p<26.7){              
                         numTraumiGiallo++;
+                        statisticheTrauma.index++;
                         if(numTraumiGiallo+numTraumiVerde<=SERVERSTRAUMA){
                             inServiceYellowTrauma++;
                             int index = FindOne(traumi); //trovare un server libero
@@ -347,6 +406,7 @@ int main(){
                     }
                     if(p<51.4){            
                         numMedicoGiallo++;
+                        statisticheMedical.index++;
                         if(numMedicoGiallo+numMedicoVerde<=SERVERSMEDICAL){
                             inServiceYellowMedical++;
                             int index = FindOne(medico); 
@@ -358,6 +418,7 @@ int main(){
                     }
                     else{    
                         numMinoreGiallo++; 
+                        statisticheMinor.index++;
                         if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
                             inServiceYellowMinor++;
                             int index = FindOne(minori); //trovare un server libero
@@ -373,6 +434,7 @@ int main(){
                     p = Uniform(0,100);
                     if(p<26.7){             
                         numTraumiVerde++;
+                        statisticheTrauma.index++;
                         if(numTraumiGiallo+numTraumiVerde<=SERVERSTRAUMA){
                             if(numTraumiGiallo-inServiceYellowTrauma==0){
                                 int index = FindOne(traumi); 
@@ -385,6 +447,7 @@ int main(){
                     }
                     if(p<51.4){             
                         numMedicoVerde++;
+                        statisticheMedical.index++;
                         if(numMedicoGiallo+numMedicoVerde<=SERVERSMEDICAL){
                             if(numMedicoGiallo-inServiceYellowMedical==0){
                                 int index = FindOne(medico); 
@@ -397,6 +460,7 @@ int main(){
                     }
                     else{    
                         numMinoreVerde++; 
+                        statisticheMinor.index++;
                         if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
                             if(numMinoreGiallo-inServiceYellowMinor==0){
                                 inServiceGreenMinor++;
@@ -411,6 +475,7 @@ int main(){
                     break;
                 case white: 
                     numMinoreBianco++;
+                    statisticheMinor.index++;
                     if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
                         if((numMinoreGiallo-inServiceYellowMinor==0) && (numMinoreVerde-inServiceGreenMinor==0)){
                             int index = FindOne(minori); //trovare un server libero
@@ -541,6 +606,7 @@ int main(){
                     else
                         t.completionRossa=-1;
                 }
+                /*
                 printf("TEMPO:%f\n", t.current);
                 printf("Tempi: %f\t %f\t %f\t %f\t %f\t %f\t", t.arrival, triage[t.completionTriage].service, rossa[t.completionRossa].service, traumi[t.completionTrauma].service, medico[t.completionMedical].service, minori[t.completionMinor].service); 
                 printf("Triage:\t");
@@ -565,9 +631,14 @@ int main(){
                 } 
                 printf("\n");
                 printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",numeroCodaRossa, numTraumiGiallo+numTraumiVerde, numMedicoGiallo+numMedicoVerde, numMinoreGiallo+numMinoreVerde+numMinoreBianco, numeroCodaTriage);
-               
+                */
 
     }
+    stampaStatistiche(statisticheTriage);
+    stampaStatistiche(statisticheRossa);
+    stampaStatistiche(statisticheTrauma);
+    stampaStatistiche(statisticheMinor);
+    stampaStatistiche(statisticheMedical);
     return 0;
 }
 
