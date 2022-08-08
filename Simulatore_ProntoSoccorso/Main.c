@@ -2,10 +2,19 @@
 //  Main.c
 //  Simulatore_ProntoSoccorso
 //
-//  Created by Matteo Federico on 12/05/22.
+//  Created by Matteo Federico, Adrian Petru Baba, Sara Da Canal on 12/05/22.
+//
 //
 
-//7
+
+/*  USED STREAMS:
+        0-4:    for each service completion random generation
+        5:      for triage arrival time generation  
+        6:      to generate the code assigned to smeone after he passes the triage
+        7:      to generate the variable that let us decide if someone in red code dies or not
+        8:      to decide wich node will take someone after he gets the code color yellow
+        9:      to decide wich node will take someone after he gets the code color green
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,69 +22,82 @@
 #include "libreriaRand/rngs.h" //spostare le librerie
 
 #define START 0.0
-#define STOP 40000.0
+#define STOP 500000.0
 #define INF   (100.0 * STOP)
 #define SEED 123456789
-#define SERVERSTRIAGE 3
-#define SERVERSRED 3
+
+//size in # of servers, for each node
+#define SERVERSTRIAGE 2
+#define SERVERSRED 2
 #define SERVERSTRAUMA 3    
 #define SERVERSMEDICAL 10    
 #define SERVERSMINOR 10    
 
-double arrival; //usata per salvare l'istante del pross
+//simulation variables
+double arrival; 
 
-typedef struct area{
+//metadata needed to calculate output variables
+//@name change
+typedef struct nodeData{
     double node;                    /* time integrated number in the node  */
     double queue;                   /* time integrated number in the queue */
     double service;                 /* time integrated number in service   */
-    int index;                      /* numero persone totali servite */
+    int index;                      /* # of persons who passed the node */
     double current;
-    int numeroServer;
-} area;
+    int serverNumber;
+} nodeData;
 
+//event metadata
 typedef struct event{     
     double arrival;
-    int completionTriage; 
-    int completionRossa;
-    int completionTrauma;
-    int completionMedical;
-    int completionMinor;
+
+    //index of the next server of that specific node (ex. triage, red code) that wil have a completion
+    int triageCompletion; 
+    int redCodeCompletion;
+    int traumaCompletion;
+    int medicalCompletion;
+    int minorCompletion;
+
     double current;
     double next;
     double last;
-}event;
+} event;
 
+//code colors
 typedef enum color{
     white,
     green,
     yellow,
     red,
     none
-}color;
+} color;
 
+//multiserver metadata
 typedef struct multiserver{
     double service;
     int occupied;
     color color;
-}multiserver;
+} multiserver;
 
+//data needed for each node of the system
 typedef struct paramService{
     double mean;
     int stream;
 }paramService;
 
-paramService traumaParams;      //parametri per la generazione dei tempi di servizio per ogni multiserver
+paramService traumaParams;      
 paramService medicalParams;
 paramService minorParams;
 paramService triageParams;
 paramService redParams;
 
+//initialization of the data needed to generate the service time for each node
 void intitParamService(){
     traumaParams.mean=93.4;
     medicalParams.mean=165.9;
     minorParams.mean=105.6;
     redParams.mean=225.5;
-    triageParams.mean=6;
+    triageParams.mean=10.0;
 
     triageParams.stream=0;
     redParams.stream=1;
@@ -84,55 +106,36 @@ void intitParamService(){
     minorParams.stream=4;
 }
 
-double Exponential(double m)
+double Exponential(double m){
 /* ---------------------------------------------------
  * generate an Exponential random variate, use m > 0.0 
  * ---------------------------------------------------
  */
-{
     return (-m * log(1.0 - Random()));
 }
-double Uniform(double a, double b)
+
+double Uniform(double a, double b){
 /* --------------------------------------------
  * generate a Uniform random variate, use a < b 
  * --------------------------------------------
  */
-{
+
     return (a + (b - a) * Random());
 }
-double Min(double a, multiserver triage[], multiserver rossa[], multiserver traumi[], multiserver medico[], multiserver minori[])
-/* ------------------------------------------------
- * return the smaller of between every service time
+
+//@ added and replaced function at main start 
+double getSpecificMin(double currentMin, multiserver *mserver, int serverDim){
+ /*    ------------------------------------------------
+ * return the smaller of between the current minimum and every multiserver service time
  * ------------------------------------------------
  */
-{ 
-    double min=a;
-    for(int i=0;i<SERVERSTRIAGE;i++){
-        if(triage[i].service < min)
-            min = triage[i].service;
-    }
-    for(int i=0;i<SERVERSRED;i++){
-        if(rossa[i].service < min){
-            min = rossa[i].service;
-        }
-    }
-    for(int i=0;i<SERVERSTRAUMA;i++){
-        if(traumi[i].service < min){
-            min = traumi[i].service;
-        }
-    }
-    for(int i=0;i<SERVERSMEDICAL;i++){
-        if(medico[i].service < min){
-            min = medico[i].service;
-        }
-    }
-    for(int i=0;i<SERVERSMINOR;i++){
-        if(minori[i].service < min){
-            min = minori[i].service;
-        }
+    double min=currentMin;
+    for(int i=0; i<serverDim; i++){
+        if(mserver[i].service<min)  min = mserver[i].service;
     }
     return min;
 }
+
 
 double getArrival(){
 /* ----------------------------
@@ -144,12 +147,11 @@ double getArrival(){
     return arrival;
 }
 
-int NextEvent(multiserver event[], int length)
+int NextEvent(multiserver event[], int length){
 /* ---------------------------------------
  * return the index of the next event type
  * ---------------------------------------
  */
-{
     int e = 0;                                      
     int i = 1;
     while (i < length) { 
@@ -163,19 +165,16 @@ int NextEvent(multiserver event[], int length)
     return (e);
 }
 
-
-int FindOne(multiserver event[])
+//@improved
+int FindOne(multiserver mserver[]){
 /* ----------------------------------------------
  * return the index of the first available server
  * ----------------------------------------------
  */
-{
-    int s;
-    int i = 0;
-    while (event[i].occupied == 1)      
-        i++;                      
-    s = i;
-    return (s);
+    int index = 0;
+    while (mserver[index].occupied == 1)      
+        index++;                      
+    return (index);
 }
 
 color assignCode(){
@@ -195,7 +194,6 @@ color assignCode(){
         return white;
 }
 
-
 double getService(paramService service){
 /* --------------------------------------------------
  * return the next service time for the given service
@@ -204,16 +202,20 @@ double getService(paramService service){
     SelectStream(service.stream);
     return Exponential(service.mean);
 }
-void initStatistiche(area * appoggio,int dim)
+
+//init the noteData structure
+void initOutputStats(nodeData *node, int dim)
 {
-    appoggio->node=0.0;
-    appoggio->queue=0.0;
-    appoggio->service=0.0;
-    appoggio->index=0;
-    appoggio->numeroServer=dim;
+    node->node=0.0;
+    node->queue=0.0;
+    node->service=0.0;
+    node->index=0;
+    node->serverNumber=dim;
 }
-void stampaStatistiche(area appoggio){
-    printf("\nfor %ld jobs\n", appoggio.index);
+
+//for debug only
+void printStats(nodeData appoggio){
+    printf("\nfor %d jobs\n", appoggio.index);
    // printf("   average interarrival time = %6.2f\n", t.last / appoggio.index);
     printf("   average wait ............ = %6.2f\n", appoggio.node / appoggio.index);
     printf("   average delay ........... = %6.2f\n", appoggio.queue / appoggio.index);
@@ -221,268 +223,265 @@ void stampaStatistiche(area appoggio){
     printf("   average # in the node ... = %6.2f\n", appoggio.node / appoggio.current);
     printf("   average # in the queue .. = %6.2f\n", appoggio.queue / appoggio.current);
     printf("   statistiche.current= %6.2f\n   ",appoggio.current);
-    printf("   utilization ............. = %6.2f\n", (appoggio.service/appoggio.numeroServer) / appoggio.current);
+    printf("   utilization ............. = %6.2f\n", (appoggio.service/appoggio.serverNumber) / appoggio.current);
 }
-void incrementoStatistiche(area *appoggio,int num,double current,double next){
-    appoggio->node    += (next - current) * num;
-    if(num>appoggio->numeroServer)
-        appoggio->service += (next - current)*appoggio->numeroServer;
+
+//stats updater for each step
+void statsUpdater(nodeData *node, int num, double current, double next){
+    node->node  += (next - current) * num;
+    if(num>node->serverNumber)
+        node->service += (next - current)*node->serverNumber;
     else
-        appoggio->service += (next - current)*num;
-    appoggio->current=current;
-    if(num>appoggio->numeroServer-1)
-        appoggio->queue   += (next - current) * (num - appoggio->numeroServer);
+        node->service += (next - current)*num;
+    node->current=current;
+    if(num>node->serverNumber-1)
+        node->queue   += (next - current) * (num - node->serverNumber);
 }
+
+//initialize each server metadata
+void initServerData(multiserver *server, int dim){
+    for(int i=0; i<dim; i++){
+        server[i].occupied=0;
+        server[i].service=INF;
+        server[i].color=none;
+    }
+}
+
+//@added!!
+void modifyServerData(multiserver *server, double service, int occupied){
+    server->service=service;
+    server->occupied=occupied;
+}
+
+void modifyServerDataColor(multiserver *server, double service, int occupied, color color){
+    modifyServerData(server, service, occupied);
+    server->color=color;
+}
+
 int main(){
 
-    area statisticheTriage;
-    area statisticheRossa;
-    area statisticheTrauma;
-    area statisticheMedical;
-    area statisticheMinor;
+    nodeData triageStats;
+    nodeData redCodeStats;
+    nodeData traumaStats;
+    nodeData medicalStats;
+    nodeData minorStats;
 
-
-    initStatistiche(&statisticheTriage,SERVERSTRIAGE);
-    initStatistiche(&statisticheRossa,SERVERSRED);
-    initStatistiche(&statisticheTrauma,SERVERSTRAUMA);
-    initStatistiche(&statisticheMedical,SERVERSMEDICAL);
-    initStatistiche(&statisticheMinor,SERVERSMINOR);
-
-
+    initOutputStats(&triageStats,SERVERSTRIAGE);
+    initOutputStats(&redCodeStats,SERVERSRED);
+    initOutputStats(&traumaStats,SERVERSTRAUMA);
+    initOutputStats(&medicalStats,SERVERSMEDICAL);
+    initOutputStats(&minorStats,SERVERSMINOR);
 
     intitParamService();
+
     arrival=START;
-    int counter = 0;
-    int numeroCodaTriage=0;
-    int numeroCodaRossa=0;
+    int counter = 0; //MESà NON è USATO
 
-    int numMedicoGiallo=0;
-    int numMedicoVerde=0;
+    //number of people in queue for a specific area (and code color)
+    int triageQueueNumber=0;
+    int redCodeQueueNumber=0;
 
-    int numMinoreGiallo=0;
-    int numMinoreVerde=0;
-    int numMinoreBianco=0;
+    int medicalYellowNumber=0;
+    int medicalGreenNumber=0;
 
-    int numTraumiGiallo=0;
-    int numTraumiVerde=0;
+    int minorYellowNumber=0;
+    int minorGreenNumber=0;
+    int minorWhiteNumber=0;
 
-    int inServiceYellowTrauma=0;
-    int inServiceYellowMedical=0;
-    int inServiceYellowMinor=0;
+    int traumaYellowNumber=0;
+    int traumaGreenNumber=0;
 
-    int inServiceGreenMinor=0;
+    int traumaInServiceYellow=0;
+    int medicalInServiceYellow=0;
+    int minorInServiceYellow=0;
+
+    int minorInServiceGreen=0;
 
     PlantSeeds(SEED);
     event t;
-    multiserver triage[SERVERSTRIAGE];      //inizializzare un array per ogni multiserver
-    multiserver rossa[SERVERSRED];
 
-    multiserver traumi[SERVERSTRAUMA];   
-    multiserver medico[SERVERSMEDICAL];
-    multiserver minori[SERVERSMINOR];     
+    //an array of servers for each multiserver
+    multiserver triage[SERVERSTRIAGE];      
+    multiserver redCode[SERVERSRED];
+    multiserver trauma[SERVERSTRAUMA];   
+    multiserver medical[SERVERSMEDICAL];
+    multiserver minor[SERVERSMINOR];     
 
-    for(int i=0; i<SERVERSTRIAGE; i++){ 
-        triage[i].occupied=0;
-        triage[i].service=INF;
-    }
+    initServerData(triage, SERVERSTRIAGE);
+    initServerData(medical, SERVERSMEDICAL);
+    initServerData(minor, SERVERSMINOR);
+    initServerData(trauma, SERVERSTRAUMA);
+    initServerData(redCode, SERVERSRED);
 
-    for(int i=0; i<SERVERSMEDICAL; i++){ 
-        medico[i].occupied=0;
-        medico[i].service=INF;
-    }
-
-    for(int i=0; i<SERVERSMINOR; i++){ 
-        minori[i].occupied=0;
-        minori[i].service=INF;
-    }
-
-    for(int i=0; i<SERVERSTRAUMA; i++){ 
-        traumi[i].occupied=0;
-        traumi[i].service=INF;
-    }
-
-    for(int i=0;i<SERVERSRED; i++){
-        rossa[i].occupied=0;
-        rossa[i].service=INF;
-    }
     t.arrival=getArrival();
-    t.completionTriage=-1;
-    t.completionRossa=-1;
-    t.completionTrauma=-1;
-    t.completionMedical=-1;
-    t.completionMinor=-1;
+    t.triageCompletion=-1;
+    t.redCodeCompletion=-1;
+    t.traumaCompletion=-1;
+    t.medicalCompletion=-1;
+    t.minorCompletion=-1;
     t.current=START;
     t.last=START;   //per statistiche non serve
 
-    while(t.arrival<STOP || numeroCodaTriage>0 || numeroCodaRossa>0 || numTraumiGiallo+numTraumiVerde>0 || 
-        numMinoreGiallo+numMinoreVerde+numMinoreBianco>0 || numMedicoGiallo+numMedicoVerde>0){
-        
-        t.next=Min(t.arrival, triage, rossa, traumi, medico, minori);   
-       
-
-        if(numeroCodaTriage>0)  incrementoStatistiche(&statisticheTriage,numeroCodaTriage,t.current,t.next);
+    //@improved while condition?
+    while(t.arrival<STOP || 
+    (triageQueueNumber+redCodeQueueNumber+traumaYellowNumber+
+    traumaGreenNumber+minorYellowNumber+minorGreenNumber+
+    minorWhiteNumber+medicalYellowNumber+medicalGreenNumber)>0){
+        t.next=getSpecificMin(t.arrival, triage, SERVERSTRIAGE);
+        t.next=getSpecificMin(t.next, redCode, SERVERSRED);
+        t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
+        t.next=getSpecificMin(t.next, medical, SERVERSMEDICAL); 
+        t.next=getSpecificMin(t.next, minor, SERVERSMINOR);    
+        if(triageQueueNumber>0)  statsUpdater(&triageStats,triageQueueNumber,t.current,t.next);
             
-        if(numeroCodaRossa>0)   incrementoStatistiche(&statisticheRossa,numeroCodaRossa,t.current,t.next);
+        if(redCodeQueueNumber>0)   statsUpdater(&redCodeStats,redCodeQueueNumber,t.current,t.next);
 
-        if(numTraumiGiallo+numTraumiVerde>0)  incrementoStatistiche(&statisticheTrauma,numTraumiGiallo+numTraumiVerde,t.current,t.next);
+        if(traumaYellowNumber+traumaGreenNumber>0)  statsUpdater(&traumaStats,traumaYellowNumber+traumaGreenNumber,t.current,t.next);
 
-        if(numMedicoGiallo+numMedicoVerde>0)  incrementoStatistiche(&statisticheMedical,numMedicoGiallo+numMedicoVerde,t.current,t.next);
+        if(medicalYellowNumber+medicalGreenNumber>0)  statsUpdater(&medicalStats,medicalYellowNumber+medicalGreenNumber,t.current,t.next);
 
-        if(numMinoreGiallo+numMinoreVerde+numMinoreBianco>0)  incrementoStatistiche(&statisticheMinor,numMinoreGiallo+numMinoreVerde+numMinoreBianco,t.current,t.next);
+        if(minorYellowNumber+minorGreenNumber+minorWhiteNumber>0)  statsUpdater(&minorStats,minorYellowNumber+minorGreenNumber+minorWhiteNumber,t.current,t.next);
 
-
-
-        t.current=t.next;    //probabilmente non serve poi vediamo
-        /* processamento di un arrivo */
+        t.current=t.next;    //not needed?
+        /* process an arrival */
         if(t.current==t.arrival){
-            numeroCodaTriage++;
-            statisticheTriage.index++;
+            triageQueueNumber++;
+            triageStats.index++;
 
             t.arrival=getArrival();
             if(t.arrival>STOP){
                 t.last=t.current;
                 t.arrival=INF;
             }
-            if(numeroCodaTriage<=SERVERSTRIAGE){
-                int index = FindOne(triage); //trovare un server libero
+            if(triageQueueNumber<=SERVERSTRIAGE){
+                int index = FindOne(triage); //find a free server
                 triage[index].service=t.current+getService(triageParams);
                 triage[index].occupied=1;
-                t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
+                t.triageCompletion=NextEvent(triage, SERVERSTRIAGE);
             }
         }
-        /* completamento nel triage e invio al server successivo */
-        else if(t.completionTriage>-1 && t.current==triage[t.completionTriage].service){
-                numeroCodaTriage--;
-                if(numeroCodaTriage-SERVERSTRIAGE>=0){
-                    triage[t.completionTriage].service=t.current+getService(triageParams);
-                    triage[t.completionTriage].occupied=1;
-                    
-                }
-                else{
-                    triage[t.completionTriage].service=INF;
-                    triage[t.completionTriage].occupied=0;
-                }
-                if(numeroCodaTriage > 0)
-                    t.completionTriage=NextEvent(triage, SERVERSTRIAGE);
-                else
-                    t.completionTriage=-1;
-                color code = assignCode();
-                double p;    //p è usato per le probabilità
 
-                /* assegnazione a un'altra coda in base al colore */
+        /* completion of the triage phase and transfer to the next phase */
+        else if(t.triageCompletion>-1 && t.current==triage[t.triageCompletion].service){
+                triageQueueNumber--;
+                //@every server data modification replaced w function row 250
+                if(triageQueueNumber-SERVERSTRIAGE>=0)
+                    modifyServerData(&triage[t.triageCompletion], t.current+getService(triageParams), 1);                 
+                
+                else
+                    modifyServerData(&triage[t.triageCompletion], INF, 0);
+
+                if(triageQueueNumber > 0)
+                    t.triageCompletion=NextEvent(triage, SERVERSTRIAGE);
+                else
+                    t.triageCompletion=-1;
+
+                color code = assignCode();
+                double p;    //p for probability stuff
+
+                /* queue assignment, based on code color */
                 switch (code){
                 case red:
-                    numeroCodaRossa++;
-                    statisticheRossa.index++;
-                    if(numeroCodaRossa<=SERVERSRED){
-                        int index=FindOne(rossa);
-                        rossa[index].service = t.current+getService(redParams);
-                        rossa[index].occupied = 1;
-                        t.completionRossa = NextEvent(rossa, SERVERSRED);
+                    redCodeQueueNumber++;
+                    redCodeStats.index++;
+                    if(redCodeQueueNumber<=SERVERSRED){
+                        int index=FindOne(redCode);
+                        modifyServerData(&redCode[index], t.current+getService(redParams), 1); 
+                        t.redCodeCompletion = NextEvent(redCode, SERVERSRED);
                     }
-                    /*Probabilità muoia qualcuno*/
+
+                    /*people in red code may die while waiting (if they don't get served immediately)... :( */
                     else{
                         SelectStream(7);
                         p = Uniform(0,100);
-                        if(p<5.2){              //TODO costante da decidere
-                            numeroCodaRossa--;
+                        if(p<5.2){              
+                            redCodeQueueNumber--;     
                         }
                     }
                     break;
+
                 case yellow:
-                    SelectStream(8);    //TODO probabilità di finire in diverse specializzazioni da mettere in funzione
+                    SelectStream(8);    
                     p = Uniform(0,100);
                     if(p<26.7){              
-                        numTraumiGiallo++;
-                        statisticheTrauma.index++;
-                        if(numTraumiGiallo+numTraumiVerde<=SERVERSTRAUMA){
-                            inServiceYellowTrauma++;
-                            int index = FindOne(traumi); //trovare un server libero
-                            traumi[index].service=t.current+getService(traumaParams); 
-                            traumi[index].occupied=1;
-                            traumi[index].color=yellow;
-                            t.completionTrauma=NextEvent(traumi, SERVERSTRAUMA);
+                        traumaYellowNumber++;
+                        traumaStats.index++;
+                        if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
+                            traumaInServiceYellow++;
+                            int index = FindOne(trauma); //find a free server
+                            modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, yellow); 
+                            t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                         }
                     }
                     if(p<51.4){            
-                        numMedicoGiallo++;
-                        statisticheMedical.index++;
-                        if(numMedicoGiallo+numMedicoVerde<=SERVERSMEDICAL){
-                            inServiceYellowMedical++;
-                            int index = FindOne(medico); 
-                            medico[index].service=t.current+getService(medicalParams); 
-                            medico[index].occupied=1;
-                            medico[index].color=yellow;
-                            t.completionMedical=NextEvent(medico, SERVERSMEDICAL);
+                        medicalYellowNumber++;
+                        medicalStats.index++;
+                        if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
+                            medicalInServiceYellow++;
+                            int index = FindOne(medical); 
+                            modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, yellow); 
+                            t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                         }
                     }
                     else{    
-                        numMinoreGiallo++; 
-                        statisticheMinor.index++;
-                        if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
-                            inServiceYellowMinor++;
-                            int index = FindOne(minori); //trovare un server libero
-                            minori[index].service=t.current+getService(minorParams); 
-                            minori[index].occupied=1;
-                            minori[index].color=yellow;
-                            t.completionMinor=NextEvent(minori, SERVERSMINOR);
+                        minorYellowNumber++; 
+                        minorStats.index++;
+                        if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
+                            minorInServiceYellow++;
+                            int index = FindOne(minor); //find a free server
+                            modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, yellow); 
+                            t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                         }
                     }
                     break;
+
                 case green:
                     SelectStream(9);
                     p = Uniform(0,100);
                     if(p<26.7){             
-                        numTraumiVerde++;
-                        statisticheTrauma.index++;
-                        if(numTraumiGiallo+numTraumiVerde<=SERVERSTRAUMA){
-                            if(numTraumiGiallo-inServiceYellowTrauma==0){
-                                int index = FindOne(traumi); 
-                                traumi[index].service=t.current+getService(traumaParams); 
-                                traumi[index].occupied=1;
-                                minori[index].color=green;
-                                t.completionTrauma=NextEvent(traumi, SERVERSTRAUMA);
+                        traumaGreenNumber++;
+                        traumaStats.index++;
+                        if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
+                            if(traumaYellowNumber-traumaInServiceYellow==0){
+                                int index = FindOne(trauma); 
+                                modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, green);
+                                t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                             }
                         }
                     }
                     if(p<51.4){             
-                        numMedicoVerde++;
-                        statisticheMedical.index++;
-                        if(numMedicoGiallo+numMedicoVerde<=SERVERSMEDICAL){
-                            if(numMedicoGiallo-inServiceYellowMedical==0){
-                                int index = FindOne(medico); 
-                                medico[index].service=t.current+getService(medicalParams); 
-                                medico[index].occupied=1;
-                                minori[index].color=green;
-                                t.completionMedical=NextEvent(medico, SERVERSMEDICAL);
+                        medicalGreenNumber++;
+                        medicalStats.index++;
+                        if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
+                            if(medicalYellowNumber-medicalInServiceYellow==0){
+                                int index = FindOne(medical); 
+                                modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, green);
+                                t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                             }
                         }
                     }
                     else{    
-                        numMinoreVerde++; 
-                        statisticheMinor.index++;
-                        if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
-                            if(numMinoreGiallo-inServiceYellowMinor==0){
-                                inServiceGreenMinor++;
-                                int index = FindOne(minori); //trovare un server libero
-                                minori[index].service=t.current+getService(minorParams); 
-                                minori[index].occupied=1;
-                                minori[index].color=green;
-                                t.completionMinor=NextEvent(minori, SERVERSMINOR);
+                        minorGreenNumber++; 
+                        minorStats.index++;
+                        if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
+                            if(minorYellowNumber-minorInServiceYellow==0){
+                                minorInServiceGreen++;
+                                int index = FindOne(minor); //find a free server
+                                modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, green);
+                                t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                             }
                         }
                     }
                     break;
+
                 case white: 
-                    numMinoreBianco++;
-                    statisticheMinor.index++;
-                    if(numMinoreGiallo+numMinoreVerde+numMinoreBianco<=SERVERSMINOR){
-                        if((numMinoreGiallo-inServiceYellowMinor==0) && (numMinoreVerde-inServiceGreenMinor==0)){
-                            int index = FindOne(minori); //trovare un server libero
-                            minori[index].service=t.current+getService(minorParams); 
-                            minori[index].occupied=1;
-                            minori[index].color=white;
-                            t.completionMinor=NextEvent(minori, SERVERSMINOR);
+                    minorWhiteNumber++;
+                    minorStats.index++;
+                    if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
+                        if((minorYellowNumber-minorInServiceYellow==0) && (minorGreenNumber-minorInServiceGreen==0)){
+                            int index = FindOne(minor); //find a free server
+                            modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, white);
+                            t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                         }
                     }
                     break; 
@@ -490,155 +489,144 @@ int main(){
                     break;
                 }
             }
-            /* completamento nel server dei traumi */
-            else if(t.completionTrauma>-1 && t.current==traumi[t.completionTrauma].service){
-                if(traumi[t.completionTrauma].color==yellow){
-                    numTraumiGiallo--;
-                    inServiceYellowTrauma--;
+
+            /* trauma server completion */
+            else if(t.traumaCompletion>-1 && t.current==trauma[t.traumaCompletion].service){
+                if(trauma[t.traumaCompletion].color==yellow){
+                    traumaYellowNumber--;
+                    traumaInServiceYellow--;
                 }
                 else{
-                    numTraumiVerde--;
+                    traumaGreenNumber--;
                 }
-                if(numTraumiGiallo-inServiceYellowTrauma>0){
-                    traumi[t.completionTrauma].service = t.current+getService(traumaParams);
-                    traumi[t.completionTrauma].occupied = 1;
-                    traumi[t.completionTrauma].color = yellow;
-                    inServiceYellowTrauma++;
+                //yellow codes have > priority than green codes
+                if(traumaYellowNumber-traumaInServiceYellow>0){
+                    modifyServerDataColor(&trauma[t.traumaCompletion], t.current+getService(traumaParams), 1, yellow);
+                    traumaInServiceYellow++;
                 }
-                else if(numTraumiVerde>=SERVERSTRAUMA-inServiceYellowTrauma){
-                    traumi[t.completionTrauma].service = t.current+getService(traumaParams);
-                    traumi[t.completionTrauma].occupied = 1;
-                    traumi[t.completionTrauma].color = green;
+                else if(traumaGreenNumber>=SERVERSTRAUMA-traumaInServiceYellow){
+                    modifyServerDataColor(&trauma[t.traumaCompletion], t.current+getService(traumaParams), 1, green);
                 }
                 else{
-                    traumi[t.completionTrauma].service = INF;
-                    traumi[t.completionTrauma].occupied = 0;
-                    traumi[t.completionTrauma].color = none;
+                    modifyServerDataColor(&trauma[t.traumaCompletion], INF, 0, none);
                 }
-                if(numTraumiGiallo+numTraumiVerde>0)
-                    t.completionTrauma = NextEvent(traumi, SERVERSTRAUMA);
+
+                if(traumaYellowNumber+traumaGreenNumber>0)
+                    t.traumaCompletion = NextEvent(trauma, SERVERSTRAUMA);
                 else
-                    t.completionTrauma=-1;
+                    t.traumaCompletion=-1;
             }
-            /* completamento nel server medico */
-            else if(t.completionMedical>-1 && t.current==medico[t.completionMedical].service){
-                if(medico[t.completionMedical].color==yellow){
-                    numMedicoGiallo--;
-                    inServiceYellowMedical--;
+
+            /* medical server completion */
+            else if(t.medicalCompletion>-1 && t.current==medical[t.medicalCompletion].service){
+                if(medical[t.medicalCompletion].color==yellow){
+                    medicalYellowNumber--;
+                    medicalInServiceYellow--;
                 }
                 else{
-                    numMedicoVerde--;
+                    medicalGreenNumber--;
                 }
-                if(numMedicoGiallo-inServiceYellowMedical>0){
-                    medico[t.completionMedical].service = t.current+getService(medicalParams);
-                    medico[t.completionMedical].occupied = 1;
-                    medico[t.completionMedical].color = yellow;
-                    inServiceYellowMedical++;
+                if(medicalYellowNumber-medicalInServiceYellow>0){
+                    modifyServerDataColor(&medical[t.medicalCompletion], t.current+getService(medicalParams), 1, yellow);
+                    medicalInServiceYellow++;
                 }
-                else if(numMedicoVerde>=SERVERSMEDICAL-inServiceYellowMedical){
-                    medico[t.completionMedical].service = t.current+getService(medicalParams);
-                    medico[t.completionMedical].occupied = 1;
-                    medico[t.completionMedical].color = green;
+                else if(medicalGreenNumber>=SERVERSMEDICAL-medicalInServiceYellow){
+                    modifyServerDataColor(&medical[t.medicalCompletion], t.current+getService(medicalParams), 1, green);
                 }
                 else{
-                    medico[t.completionMedical].service = INF;
-                    medico[t.completionMedical].occupied = 0;
-                    medico[t.completionMedical].color = none;
+                    modifyServerDataColor(&medical[t.medicalCompletion], INF, 0, none);
                 }
-                if(numMedicoGiallo+numMedicoVerde>0)
-                    t.completionMedical = NextEvent(medico, SERVERSMEDICAL);
+
+                if(medicalYellowNumber+medicalGreenNumber>0)
+                    t.medicalCompletion = NextEvent(medical, SERVERSMEDICAL);
                 else
-                    t.completionMedical=-1;
+                    t.medicalCompletion=-1;
+            }
+
+            /* minor problems server completion */
+            else if(t.minorCompletion>-1 && t.current==minor[t.minorCompletion].service){
+                if(minor[t.minorCompletion].color==yellow){
+                    minorYellowNumber--;
+                    minorInServiceYellow--;
                 }
-                /* completamento nel server dei problemi minori */
-                else if(t.completionMinor>-1 && t.current==minori[t.completionMinor].service){
-                    if(minori[t.completionMinor].color==yellow){
-                        numMinoreGiallo--;
-                        inServiceYellowMinor--;
-                    }
-                    else if(minori[t.completionMinor].color==green){
-                        numMinoreVerde--;
-                        inServiceGreenMinor--;
-                    }
-                    else{
-                        numMinoreBianco--;
-                    }
-                    if(numMinoreGiallo-inServiceYellowMinor>0){
-                        minori[t.completionMinor].service = t.current+getService(minorParams);
-                        minori[t.completionMinor].occupied = 1;
-                        minori[t.completionMinor].color = yellow;
-                        inServiceYellowMinor++;
-                    }
-                    else if(numMinoreVerde-inServiceGreenMinor>0){
-                        minori[t.completionMinor].service = t.current+getService(minorParams);
-                        minori[t.completionMinor].occupied = 1;
-                        minori[t.completionMinor].color = green;
-                        inServiceGreenMinor++;
-                    }
-                    else if(numMinoreBianco>=SERVERSMINOR-inServiceYellowMinor-inServiceGreenMinor){
-                        minori[t.completionMinor].service = t.current+getService(minorParams);
-                        minori[t.completionMinor].occupied = 1;
-                        minori[t.completionMinor].color = white;
-                    }
-                    else{
-                        minori[t.completionMinor].service = INF;
-                        minori[t.completionMinor].occupied = 0;
-                        minori[t.completionMinor].color = none;
-                    }
-                    if(numMinoreGiallo+numMinoreVerde+numMinoreBianco>0)
-                        t.completionMinor = NextEvent(minori, SERVERSMINOR);
-                    else
-                        t.completionMinor=-1;
+                else if(minor[t.minorCompletion].color==green){
+                    minorGreenNumber--;
+                    minorInServiceGreen--;
                 }
-                /* completamento nella coda rossa */
-                else if(t.completionRossa>-1 && t.current==rossa[t.completionRossa].service){
-                    numeroCodaRossa--;
-                    if(numeroCodaRossa-SERVERSRED>=0){
-                        rossa[t.completionRossa].service=t.current+getService(redParams);
-                        rossa[t.completionRossa].occupied=1;
-                    }
-                    else{
-                        rossa[t.completionRossa].service=INF;
-                        rossa[t.completionRossa].occupied=0;
-                    }
-                    if(numeroCodaRossa > 0)
-                        t.completionRossa=NextEvent(rossa, SERVERSRED);
-                    else
-                        t.completionRossa=-1;
+                else{
+                    minorWhiteNumber--;
                 }
-                /*
-                printf("TEMPO:%f\n", t.current);
-                printf("Tempi: %f\t %f\t %f\t %f\t %f\t %f\t", t.arrival, triage[t.completionTriage].service, rossa[t.completionRossa].service, traumi[t.completionTrauma].service, medico[t.completionMedical].service, minori[t.completionMinor].service); 
-                printf("Triage:\t");
-                for(int i=0;i<SERVERSTRIAGE;i++){
-                    printf("%f\t", triage[i].service);
-                }  
-                printf("\nRossa:\t");
-                for(int i=0;i<SERVERSRED;i++){
-                    printf("%f\t", rossa[i].service);
-                }   
-                printf("\nTraumi:\t");
-                for(int i=0;i<SERVERSTRAUMA;i++){
-                    printf("%f\t", traumi[i].service);
-                } 
-                printf("\nMedico\t");
-                for(int i=0;i<SERVERSMEDICAL;i++){
-                    printf("%f\t", medico[i].service);
-                } 
-                printf("\nMinori:\t");
-                for(int i=0;i<SERVERSMINOR;i++){
-                    printf("%f\t", minori[i].service);
-                } 
-                printf("\n");
-                printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",numeroCodaRossa, numTraumiGiallo+numTraumiVerde, numMedicoGiallo+numMedicoVerde, numMinoreGiallo+numMinoreVerde+numMinoreBianco, numeroCodaTriage);
-                */
+                if(minorYellowNumber-minorInServiceYellow>0){
+                    modifyServerDataColor(&minor[t.minorCompletion], t.current+getService(minorParams), 1, yellow);
+                    minorInServiceYellow++;
+                }
+                else if(minorGreenNumber-minorInServiceGreen>0){
+                    modifyServerDataColor(&minor[t.minorCompletion], t.current+getService(minorParams), 1, green);
+                    minorInServiceGreen++;
+                }
+                else if(minorWhiteNumber>=SERVERSMINOR-minorInServiceYellow-minorInServiceGreen){
+                    modifyServerDataColor(&minor[t.minorCompletion], t.current+getService(minorParams), 1, white);
+                }
+                else{
+                    modifyServerDataColor(&minor[t.minorCompletion], INF, 0, none);
+                }
+
+                if(minorYellowNumber+minorGreenNumber+minorWhiteNumber>0)
+                    t.minorCompletion = NextEvent(minor, SERVERSMINOR);
+                else
+                    t.minorCompletion=-1;
+            }
+
+            /* red code queue completion */
+            else if(t.redCodeCompletion>-1 && t.current==redCode[t.redCodeCompletion].service){
+                redCodeQueueNumber--;
+                if(redCodeQueueNumber-SERVERSRED>=0){
+                    modifyServerData(&redCode[t.redCodeCompletion], t.current+getService(redParams), 1);
+                }
+                else{
+                    modifyServerData(&redCode[t.redCodeCompletion], INF, 0);
+                }
+                if(redCodeQueueNumber > 0)
+                    t.redCodeCompletion=NextEvent(redCode, SERVERSRED);
+                else
+                    t.redCodeCompletion=-1;
+            }
+
+            //debug only
+            /*
+            printf("TEMPO:%f\n", t.current);
+            printf("Tempi: %f\t %f\t %f\t %f\t %f\t %f\t", t.arrival, triage[t.triageCompletion].service, redCode[t.redCodeCompletion].service, trauma[t.traumaCompletion].service, medical[t.medicalCompletion].service, minor[t.minorCompletion].service); 
+            printf("Triage:\t");
+            for(int i=0;i<SERVERSTRIAGE;i++){
+                printf("%f\t", triage[i].service);
+            }  
+            printf("\nRossa:\t");
+            for(int i=0;i<SERVERSRED;i++){
+                printf("%f\t", redCode[i].service);
+            }   
+            printf("\nTraumi:\t");
+            for(int i=0;i<SERVERSTRAUMA;i++){
+                printf("%f\t", trauma[i].service);
+            } 
+            printf("\nMedico\t");
+            for(int i=0;i<SERVERSMEDICAL;i++){
+                printf("%f\t", medical[i].service);
+            } 
+            printf("\nMinori:\t");
+            for(int i=0;i<SERVERSMINOR;i++){
+                printf("%f\t", minor[i].service);
+            } 
+            printf("\n");
+            printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",redCodeQueueNumber, traumaYellowNumber+traumaGreenNumber, medicalYellowNumber+medicalGreenNumber, minorYellowNumber+minorGreenNumber+minorWhiteNumber, triageQueueNumber);
+            */
 
     }
-    stampaStatistiche(statisticheTriage);
-    stampaStatistiche(statisticheRossa);
-    stampaStatistiche(statisticheTrauma);
-    stampaStatistiche(statisticheMinor);
-    stampaStatistiche(statisticheMedical);
+    //debug
+    printStats(triageStats);
+    printStats(redCodeStats);
+    printStats(traumaStats);
+    printStats(minorStats);
+    printStats(medicalStats);
     return 0;
 }
 
