@@ -307,8 +307,8 @@ int main(){
     arrival=START;
 
     //number of people in queue for a specific area (and code color)
-    int triageQueueNumber=0;
-    int redCodeQueueNumber=0;
+    int triageNumber=0;
+    int redNumber=0;
 
     int medicalYellowNumber=0;
     int medicalGreenNumber=0;
@@ -358,7 +358,7 @@ int main(){
 
     //@improved while condition
     while(t.arrival<STOP || 
-    (triageQueueNumber+redCodeQueueNumber+traumaYellowNumber+
+    (triageNumber+redNumber+traumaYellowNumber+
     traumaGreenNumber+minorYellowNumber+minorGreenNumber+
     minorWhiteNumber+medicalYellowNumber+medicalGreenNumber)>0){
         t.next=getSpecificMin(t.arrival, triage, SERVERSTRIAGE);
@@ -366,9 +366,9 @@ int main(){
         t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
         t.next=getSpecificMin(t.next, medical, SERVERSMEDICAL); 
         t.next=getSpecificMin(t.next, minor, SERVERSMINOR);    
-        if(triageQueueNumber>0)  statsUpdater(&triageStats,triageQueueNumber,t.current,t.next);
+        if(triageNumber>0)  statsUpdater(&triageStats,triageNumber,t.current,t.next);
             
-        if(redCodeQueueNumber>0)   statsUpdater(&redCodeStats,redCodeQueueNumber,t.current,t.next);
+        if(redNumber>0)   statsUpdater(&redCodeStats,redNumber,t.current,t.next);
 
         if(traumaYellowNumber+traumaGreenNumber>0)  statsUpdater(&traumaStats,traumaYellowNumber+traumaGreenNumber,t.current,t.next);
 
@@ -393,7 +393,7 @@ int main(){
         t.current=t.next;    //not needed?
         /* process an arrival */
         if(t.current==t.arrival){
-            triageQueueNumber++;
+            triageNumber++;
             triageStats.index++;
 
             t.arrival=getArrival();
@@ -401,7 +401,7 @@ int main(){
                 t.last=t.current;
                 t.arrival=INF;
             }
-            if(triageQueueNumber<=SERVERSTRIAGE){
+            if(triageNumber<=SERVERSTRIAGE){
                 int index = FindOne(triage); //find a free server
                 triage[index].service=t.current+getService(triageParams);
                 triage[index].occupied=1;
@@ -411,15 +411,15 @@ int main(){
 
         /* completion of the triage phase and transfer to the next phase */
         else if(t.triageCompletion>-1 && t.current==triage[t.triageCompletion].service){
-                triageQueueNumber--;
+                triageNumber--;
                 //@every server data modification replaced w function row 250
-                if(triageQueueNumber-SERVERSTRIAGE>=0)
+                if(triageNumber-SERVERSTRIAGE>=0)
                     modifyServerData(&triage[t.triageCompletion], t.current+getService(triageParams), 1);                 
                 
                 else
                     modifyServerData(&triage[t.triageCompletion], INF, 0);
 
-                if(triageQueueNumber > 0)
+                if(triageNumber > 0)
                     t.triageCompletion=NextEvent(triage, SERVERSTRIAGE);
                 else
                     t.triageCompletion=-1;
@@ -430,9 +430,9 @@ int main(){
                 /* queue assignment, based on code color */
                 switch (code){
                 case red:
-                    redCodeQueueNumber++;
+                    redNumber++;
                     redCodeStats.index++;
-                    if(redCodeQueueNumber<=SERVERSRED){
+                    if(redNumber<=SERVERSRED){
                         int index=FindOne(redCode);
                         modifyServerData(&redCode[index], t.current+getService(redParams), 1); 
                         t.redCodeCompletion = NextEvent(redCode, SERVERSRED);
@@ -443,7 +443,7 @@ int main(){
                         SelectStream(7);
                         p = Uniform(0,100);
                         if(p<5.2){              
-                            redCodeQueueNumber--;     
+                            redNumber--;
                         }
                     }
                     break;
@@ -643,14 +643,14 @@ int main(){
 
             /* red code queue completion */
             else if(t.redCodeCompletion>-1 && t.current==redCode[t.redCodeCompletion].service){
-                redCodeQueueNumber--;
-                if(redCodeQueueNumber-SERVERSRED>=0){
+                redNumber--;
+                if(redNumber-SERVERSRED>=0){
                     modifyServerData(&redCode[t.redCodeCompletion], t.current+getService(redParams), 1);
                 }
                 else{
                     modifyServerData(&redCode[t.redCodeCompletion], INF, 0);
                 }
-                if(redCodeQueueNumber > 0)
+                if(redNumber > 0)
                     t.redCodeCompletion=NextEvent(redCode, SERVERSRED);
                 else
                     t.redCodeCompletion=-1;
@@ -681,7 +681,7 @@ int main(){
                 printf("%f\t", minor[i].service);
             } 
             printf("\n");
-            printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",redCodeQueueNumber, traumaYellowNumber+traumaGreenNumber, medicalYellowNumber+medicalGreenNumber, minorYellowNumber+minorGreenNumber+minorWhiteNumber, triageQueueNumber);
+            printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",redNumber, traumaYellowNumber+traumaGreenNumber, medicalYellowNumber+medicalGreenNumber, minorYellowNumber+minorGreenNumber+minorWhiteNumber, triageNumber);
             */
 
     }
