@@ -238,7 +238,7 @@ void statsUpdater(nodeData *node, int num, double current, double next){
         node->queue   += (next - current) * (num - node->serverNumber);
 }
 
-//TODO
+//single queue stats updater
 void partialStatsUpdater(nodeData *node, int num, int servers, double current, double next){
     node->node += (next - current) * num;
     node->service += (next - current)*servers;
@@ -275,6 +275,12 @@ int main(){
     nodeData medicalStats;
     nodeData minorStats;
 
+    nodeData yellowTraumaStats;
+    nodeData greenTraumaStats;
+
+    nodeData yellowMedicalStats;
+    nodeData greenMedicalStats;
+
     nodeData yellowMinorStats;
     nodeData greenMinorStats;
     nodeData whiteMinorStats;
@@ -286,9 +292,16 @@ int main(){
     initOutputStats(&medicalStats,SERVERSMEDICAL);
     initOutputStats(&minorStats,SERVERSMINOR);
     //partial statistic
+    initOutputStats(&yellowTraumaStats, SERVERSTRAUMA);
+    initOutputStats(&greenTraumaStats, SERVERSTRAUMA);
+
+    initOutputStats(&yellowMedicalStats, SERVERSMEDICAL);
+    initOutputStats(&greenMedicalStats, SERVERSMEDICAL);
+
     initOutputStats(&yellowMinorStats, SERVERSMINOR);
     initOutputStats(&greenMinorStats, SERVERSMINOR);
     initOutputStats(&whiteMinorStats, SERVERSMINOR);
+
     intitParamService();
 
     arrival=START;
@@ -362,13 +375,21 @@ int main(){
         if(medicalYellowNumber+medicalGreenNumber>0)  statsUpdater(&medicalStats,medicalYellowNumber+medicalGreenNumber,t.current,t.next);
 
         if(minorYellowNumber+minorGreenNumber+minorWhiteNumber>0)  statsUpdater(&minorStats,minorYellowNumber+minorGreenNumber+minorWhiteNumber,t.current,t.next);
+
+        if(traumaYellowNumber>0) partialStatsUpdater(&yellowTraumaStats, traumaYellowNumber, traumaInServiceYellow, t.current, t.next);
+
+        if(traumaGreenNumber>0) partialStatsUpdater(&greenTraumaStats, traumaGreenNumber, traumaInServiceGreen, t.current, t.next);
+
+        if(medicalYellowNumber>0) partialStatsUpdater(&yellowMedicalStats, medicalYellowNumber, medicalInServiceYellow, t.current, t.next);
+
+        if(medicalGreenNumber>0) partialStatsUpdater(&greenMedicalStats, medicalGreenNumber, medicalInServiceGreen, t.current, t.next);
         
         if(minorYellowNumber>0) partialStatsUpdater(&yellowMinorStats,minorYellowNumber, minorInServiceYellow, t.current,t.next);
         
         if(minorGreenNumber>0) partialStatsUpdater(&greenMinorStats,minorGreenNumber,minorInServiceGreen,t.current,t.next);
 
         if(minorWhiteNumber>0) partialStatsUpdater(&whiteMinorStats,minorWhiteNumber,minorInServiceWhite,t.current,t.next);
-        
+    
         t.current=t.next;    //not needed?
         /* process an arrival */
         if(t.current==t.arrival){
@@ -433,6 +454,7 @@ int main(){
                     if(p<26.7){              
                         traumaYellowNumber++;
                         traumaStats.index++;
+                        yellowTraumaStats.index++;
                         if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
                             traumaInServiceYellow++;
                             int index = FindOne(trauma); //find a free server
@@ -440,9 +462,10 @@ int main(){
                             t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                         }
                     }
-                    if(p<51.4){            
+                    else if(p<51.4){         
                         medicalYellowNumber++;
                         medicalStats.index++;
+                        yellowMedicalStats.index++;
                         if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
                             medicalInServiceYellow++;
                             int index = FindOne(medical); 
@@ -453,7 +476,7 @@ int main(){
                     else{    
                         minorYellowNumber++; 
                         minorStats.index++;
-                        yellowMinorStats.index++; //tentativo
+                        yellowMinorStats.index++;
                         if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
                             minorInServiceYellow++;
                             int index = FindOne(minor); //find a free server
@@ -469,6 +492,7 @@ int main(){
                     if(p<26.7){             
                         traumaGreenNumber++;
                         traumaStats.index++;
+                        greenTraumaStats.index++;
                         if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
                             if(traumaYellowNumber-traumaInServiceYellow==0){
                                 traumaInServiceGreen++;
@@ -478,9 +502,10 @@ int main(){
                             }
                         }
                     }
-                    if(p<51.4){             
+                    else if(p<51.4){        
                         medicalGreenNumber++;
                         medicalStats.index++;
+                        greenMedicalStats.index++;
                         if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
                             if(medicalYellowNumber-medicalInServiceYellow==0){
                                 medicalInServiceGreen++;
@@ -661,14 +686,27 @@ int main(){
 
     }
     //debug
+    printf("\n\n*** STATISTICHE GLOBALI ***\n");
+    printf("Triage\n");
     printStats(triageStats);
+    printf("Codici rossi\n");
     printStats(redCodeStats);
+    printf("Traumi\n");
     printStats(traumaStats);
+    printf("Problemi minori\n");
     printStats(minorStats);
+    printf("Problemi medici\n");
     printStats(medicalStats);
+    printf("\n\n*** STATISTICHE PARZIALI TRAUMI***\n");
+    printStats(yellowTraumaStats);
+    printStats(greenTraumaStats);
+    printf("\n\n*** STATISTICHE PARZIALI PROBLEMI MINORI***\n");
     printStats(yellowMinorStats);
     printStats(greenMinorStats);
     printStats(whiteMinorStats);
+    printf("\n\n*** STATISTICHE PARZIALI PROBLEMI MEDICI***\n");
+    printStats(yellowMedicalStats);
+    printStats(greenMedicalStats);
     return 0;
 }
 
