@@ -21,6 +21,7 @@ typedef struct output{
     double numberNode;
     double numberQueue;
     double utilization;
+    int job;
 }output;
 
 //event metadata

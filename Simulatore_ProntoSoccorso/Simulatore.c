@@ -23,7 +23,7 @@
 #include "Simulatore.h"
 
 #define START 0.0
-#define STOP 500000.0
+#define STOP 1440.0  //1440.0 sono 24 ore di studio del transiente
 #define INF   (100.0 * STOP)
 
 //size in # of servers, for each node
@@ -177,6 +177,9 @@ void printStats(nodeData appoggio){
     printf("   utilization ............. = %6.2f\n", (appoggio.service/appoggio.serverNumber) / appoggio.current);
 }
 void writeStats(output out[],nodeData appoggio,int i){
+
+
+    out[i].job=appoggio.index;
     out[i].wait=appoggio.node / appoggio.index;
     out[i].delay=appoggio.queue / appoggio.index;
     out[i].service=appoggio.service / appoggio.index;
@@ -615,35 +618,6 @@ int simulatore(output out[]){
                 else
                     t.redCodeCompletion=-1;
             }
-
-            //debug only
-            /*
-            printf("TEMPO:%f\n", t.current);
-            printf("Tempi: %f\t %f\t %f\t %f\t %f\t %f\t", t.arrival, triage[t.triageCompletion].service, redCode[t.redCodeCompletion].service, trauma[t.traumaCompletion].service, medical[t.medicalCompletion].service, minor[t.minorCompletion].service); 
-            printf("Triage:\t");
-            for(int i=0;i<SERVERSTRIAGE;i++){
-                printf("%f\t", triage[i].service);
-            }  
-            printf("\nRossa:\t");
-            for(int i=0;i<SERVERSRED;i++){
-                printf("%f\t", redCode[i].service);
-            }   
-            printf("\nTraumi:\t");
-            for(int i=0;i<SERVERSTRAUMA;i++){
-                printf("%f\t", trauma[i].service);
-            } 
-            printf("\nMedico\t");
-            for(int i=0;i<SERVERSMEDICAL;i++){
-                printf("%f\t", medical[i].service);
-            } 
-            printf("\nMinori:\t");
-            for(int i=0;i<SERVERSMINOR;i++){
-                printf("%f\t", minor[i].service);
-            } 
-            printf("\n");
-            printf("Rossi: %d\tTraumi: %d\tMedico: %d\tMinori: %d\t Triage: %d\n",redNumber, traumaYellowNumber+traumaGreenNumber, medicalYellowNumber+medicalGreenNumber, minorYellowNumber+minorGreenNumber+minorWhiteNumber, triageNumber);
-            */
-
     }
     //debug
     writeStats(out,triageStats,0);
@@ -651,6 +625,7 @@ int simulatore(output out[]){
     writeStats(out,traumaStats,2);
     writeStats(out,minorStats,3);
     writeStats(out,medicalStats,4);
+
     writeStats(out,yellowTraumaStats,5);
     writeStats(out,greenTraumaStats,6);
     writeStats(out,yellowMinorStats,7);
