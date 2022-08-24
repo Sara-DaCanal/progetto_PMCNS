@@ -5,8 +5,8 @@
 //  Created by Matteo Federico on 24/08/22.
 //
 
-#ifndef Main_h
-#define Main_h
+#ifndef Main1_h
+#define Main1_h
 
 #include <stdio.h>
 
