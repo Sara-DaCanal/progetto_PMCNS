@@ -10,6 +10,6 @@
 
 #include <stdio.h>
 #define SEED 123456789
-int simulatore(output out[]);
+int simulatore(output out[],double stop,int batch);
 
 #endif

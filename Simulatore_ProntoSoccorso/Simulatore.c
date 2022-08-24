@@ -23,8 +23,8 @@
 #include "Simulatore.h"
 
 #define START 0.0
-#define STOP 1440.0  //1440.0 sono 24 ore di studio del transiente
-#define INF   (100.0 * STOP)
+//#define STOP 1440.0  //1440.0 sono 24 ore di studio del transiente
+//#define INF   (100.0 * STOP)
 
 //size in # of servers, for each node
 #define SERVERSTRIAGE 2
@@ -35,7 +35,9 @@
 
 //simulation variables
 double arrival; 
-
+int numBatch;
+double INF;
+double STOP;
 paramService traumaParams;      
 paramService medicalParams;
 paramService minorParams;
@@ -179,13 +181,13 @@ void printStats(nodeData appoggio){
 void writeStats(output out[],nodeData appoggio,int i){
 
 
-    out[i].job=appoggio.index;
-    out[i].wait=appoggio.node / appoggio.index;
-    out[i].delay=appoggio.queue / appoggio.index;
-    out[i].service=appoggio.service / appoggio.index;
-    out[i].numberNode=appoggio.node / appoggio.current;
-    out[i].numberQueue=appoggio.queue / appoggio.current;
-    out[i].utilization=(appoggio.service/appoggio.serverNumber) / appoggio.current;
+    out[i].job+=appoggio.index/numBatch;
+    out[i].wait+=(appoggio.node / appoggio.index)/numBatch;
+    out[i].delay+=(appoggio.queue / appoggio.index)/numBatch;
+    out[i].service+=(appoggio.service / appoggio.index)/numBatch;
+    out[i].numberNode+=(appoggio.node / appoggio.current)/numBatch;
+    out[i].numberQueue+=(appoggio.queue / appoggio.current)/numBatch;
+    out[i].utilization+=((appoggio.service/appoggio.serverNumber) / appoggio.current)/numBatch;
 }
 
 
@@ -230,7 +232,11 @@ void modifyServerDataColor(multiserver *server, double service, int occupied, co
     server->color=color;
 }
 
-int simulatore(output out[]){
+int simulatore(output out[],double stop,int batch){
+
+    STOP=stop;
+    INF=STOP*100.00;
+    numBatch=batch;
 
     nodeData triageStats;
     nodeData redCodeStats;
@@ -324,6 +330,7 @@ int simulatore(output out[]){
     (triageNumber+redNumber+traumaYellowNumber+
     traumaGreenNumber+minorYellowNumber+minorGreenNumber+
     minorWhiteNumber+medicalYellowNumber+medicalGreenNumber)>0){
+        
         t.next=getSpecificMin(t.arrival, triage, SERVERSTRIAGE);
         t.next=getSpecificMin(t.next, redCode, SERVERSRED);
         t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
@@ -354,6 +361,42 @@ int simulatore(output out[]){
         if(minorWhiteNumber>0) partialStatsUpdater(&whiteMinorStats,minorWhiteNumber,minorInServiceWhite,t.current,t.next);
     
         t.current=t.next;    //not needed?
+        /*
+        if( condizione da stabilire ){
+            writeStats(out,triageStats,0);
+            writeStats(out,redCodeStats,1);
+            writeStats(out,traumaStats,2);
+            writeStats(out,minorStats,3);
+            writeStats(out,medicalStats,4);
+            writeStats(out,yellowTraumaStats,5);
+            writeStats(out,greenTraumaStats,6);
+            writeStats(out,yellowMinorStats,7);
+            writeStats(out,greenMinorStats,8);
+            writeStats(out,whiteMinorStats,9);
+            writeStats(out,yellowMedicalStats,10);
+            writeStats(out,greenMedicalStats,11);
+
+
+
+            initOutputStats(&triageStats,SERVERSTRIAGE);
+            initOutputStats(&redCodeStats,SERVERSRED);
+            initOutputStats(&traumaStats,SERVERSTRAUMA);
+            initOutputStats(&medicalStats,SERVERSMEDICAL);
+            initOutputStats(&minorStats,SERVERSMINOR);
+            //partial statistic
+            initOutputStats(&yellowTraumaStats, SERVERSTRAUMA);
+            initOutputStats(&greenTraumaStats, SERVERSTRAUMA);
+
+            initOutputStats(&yellowMedicalStats, SERVERSMEDICAL);
+            initOutputStats(&greenMedicalStats, SERVERSMEDICAL);
+
+            initOutputStats(&yellowMinorStats, SERVERSMINOR);
+            initOutputStats(&greenMinorStats, SERVERSMINOR);
+            initOutputStats(&whiteMinorStats, SERVERSMINOR);
+        }
+        */
+
+
         /* process an arrival */
         if(t.current==t.arrival){
             triageNumber++;
@@ -618,6 +661,7 @@ int simulatore(output out[]){
                 else
                     t.redCodeCompletion=-1;
             }
+
     }
     //debug
     writeStats(out,triageStats,0);
