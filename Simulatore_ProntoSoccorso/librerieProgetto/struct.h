@@ -2,6 +2,9 @@
 
 //metadata needed to calculate output variables
 //@name change
+#ifndef struct_h
+#define struct_h 
+
 typedef struct nodeData{
     double node;                    /* time integrated number in the node  */
     double queue;                   /* time integrated number in the queue */
@@ -10,6 +13,15 @@ typedef struct nodeData{
     double current;
     int serverNumber;
 } nodeData;
+
+typedef struct output{
+    double wait;
+    double delay;
+    double service;
+    double numberNode;
+    double numberQueue;
+    double utilization;
+}output;
 
 //event metadata
 typedef struct event{     
@@ -48,3 +60,5 @@ typedef struct paramService{
     double mean;
     int stream;
 }paramService;
+
+#endif
