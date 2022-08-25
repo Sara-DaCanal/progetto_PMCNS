@@ -23,5 +23,6 @@ void partialStatsUpdater(nodeData *node, int num, int servers, double current, d
 void initServerData(multiserver *server, int dim);
 void modifyServerData(multiserver *server, double service, int occupied);
 void modifyServerDataColor(multiserver *server, double service, int occupied, color color);
+void initTime(nodeData *node, double time);
 
 #endif

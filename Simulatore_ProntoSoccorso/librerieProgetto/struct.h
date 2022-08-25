@@ -11,6 +11,7 @@ typedef struct nodeData{
     double service;                 /* time integrated number in service   */
     int index;                      /* # of persons who passed the node */
     double current;
+    double init_time;
     int serverNumber;
 } nodeData;
 

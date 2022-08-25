@@ -93,6 +93,7 @@ void initOutputStats(nodeData *node, int dim)
     node->queue=0.0;
     node->service=0.0;
     node->index=0;
+    node->init_time=0.0;
     node->serverNumber=dim;
 }
 
@@ -101,9 +102,9 @@ void writeStats(output out[],nodeData appoggio,int i){
     out[i].wait+=(appoggio.node / appoggio.index);
     out[i].delay+=(appoggio.queue / appoggio.index);
     out[i].service+=(appoggio.service / appoggio.index);
-    out[i].numberNode+=(appoggio.node / appoggio.current);
-    out[i].numberQueue+=(appoggio.queue / appoggio.current);
-    out[i].utilization+=((appoggio.service/appoggio.serverNumber) / appoggio.current);
+    out[i].numberNode+=(appoggio.node / (appoggio.current-appoggio.init_time));
+    out[i].numberQueue+=(appoggio.queue / (appoggio.current-appoggio.init_time));
+    out[i].utilization+=((appoggio.service/appoggio.serverNumber) / (appoggio.current-appoggio.init_time));
 }
 
 //stats updater for each step
@@ -134,6 +135,9 @@ void initServerData(multiserver *server, int dim){
         server[i].service=INF;
         server[i].color=none;
     }
+}
+void initTime(nodeData *node, double time){
+    node->init_time=time;
 }
 
 void modifyServerData(multiserver *server, double service, int occupied){

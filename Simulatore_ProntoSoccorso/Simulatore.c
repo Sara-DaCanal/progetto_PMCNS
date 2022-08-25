@@ -223,20 +223,33 @@ int simulatore(output matrix[][12],int iteration, int finite){
 
 
             initOutputStats(&triageStats,SERVERSTRIAGE);
+            initTime(&triageStats,t.current);
             initOutputStats(&redCodeStats,SERVERSRED);
+            initTime(&redCodeStats,t.current);
             initOutputStats(&traumaStats,SERVERSTRAUMA);
+            initTime(&traumaStats,t.current);
             initOutputStats(&medicalStats,SERVERSMEDICAL);
+            initTime(&medicalStats,t.current);
             initOutputStats(&minorStats,SERVERSMINOR);
+            initTime(&minorStats,t.current);
             //partial statistic
             initOutputStats(&yellowTraumaStats, SERVERSTRAUMA);
+            initTime(&yellowTraumaStats,t.current);
             initOutputStats(&greenTraumaStats, SERVERSTRAUMA);
+            initTime(&greenTraumaStats,t.current);
 
             initOutputStats(&yellowMedicalStats, SERVERSMEDICAL);
+            initTime(&yellowMedicalStats,t.current);
             initOutputStats(&greenMedicalStats, SERVERSMEDICAL);
+            initTime(&greenMedicalStats,t.current);
 
             initOutputStats(&yellowMinorStats, SERVERSMINOR);
+            initTime(&yellowMinorStats,t.current);
             initOutputStats(&greenMinorStats, SERVERSMINOR);
+            initTime(&greenMinorStats,t.current);
             initOutputStats(&whiteMinorStats, SERVERSMINOR);
+            initTime(&whiteMinorStats,t.current);
+            
             currentBatch++;
             currentJob=0;
         }
