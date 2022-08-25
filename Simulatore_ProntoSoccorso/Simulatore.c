@@ -18,13 +18,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "libreriaRand/rngs.h" //spostare le librerie
+#include "libreriaRand/rngs.h"
 #include "librerieProgetto/struct.h"
 #include "Simulatore.h"
+#include "librerieProgetto/utils.h"
 
-#define START 0.0
-//#define STOP 1440.0  //1440.0 sono 24 ore di studio del transiente
-//#define INF   (100.0 * STOP)
 
 //size in # of servers, for each node
 #define SERVERSTRIAGE 2
@@ -35,9 +33,6 @@
 
 //simulation variables
 double arrival; 
-int numBatch;
-double INF;
-double STOP;
 paramService traumaParams;      
 paramService medicalParams;
 paramService minorParams;
@@ -59,36 +54,6 @@ void intitParamService(){
     minorParams.stream=4;
 }
 
-double Exponential(double m){
-/* ---------------------------------------------------
- * generate an Exponential random variate, use m > 0.0 
- * ---------------------------------------------------
- */
-    return (-m * log(1.0 - Random()));
-}
-
-double Uniform(double a, double b){
-/* --------------------------------------------
- * generate a Uniform random variate, use a < b 
- * --------------------------------------------
- */
-
-    return (a + (b - a) * Random());
-}
-
-//@ added and replaced function at main start 
-double getSpecificMin(double currentMin, multiserver *mserver, int serverDim){
- /*    ------------------------------------------------
- * return the smaller of between the current minimum and every multiserver service time
- * ------------------------------------------------
- */
-    double min=currentMin;
-    for(int i=0; i<serverDim; i++){
-        if(mserver[i].service<min)  min = mserver[i].service;
-    }
-    return min;
-}
-
 
 double getArrival(){
 /* ----------------------------
@@ -100,76 +65,10 @@ double getArrival(){
     return arrival;
 }
 
-int NextEvent(multiserver event[], int length){
-/* ---------------------------------------
- * return the index of the next event type
- * ---------------------------------------
- */
-    int e = 0;                                      
-    int i = 1;
-    while (i < length) { 
-        if ((event[i].occupied == 1) && (event[i].service < event[e].service))
-            e = i;
-        i++; 
-    }
-    if(event[e].occupied==0){
-        return -1;
-    }
-    return (e);
-}
-
-//@improved
-int FindOne(multiserver mserver[]){
-/* ----------------------------------------------
- * return the index of the first available server
- * ----------------------------------------------
- */
-    int index = 0;
-    while (mserver[index].occupied == 1)      
-        index++;                      
-    return (index);
-}
-
-color assignCode(){
-/* -----------------------------------
- * return the code assigned to the job
- * -----------------------------------
- */
-    SelectStream(6);
-    double x = Uniform(0,100);
-    if (x<1.04)
-        return red;
-    else if (x<19.44)
-        return yellow;
-    else if (x<80.15)
-        return green;
-    else
-        return white;
-}
-
-double getService(paramService service){
-/* --------------------------------------------------
- * return the next service time for the given service
- * --------------------------------------------------
- */
-    SelectStream(service.stream);
-    return Exponential(service.mean);
-}
-
-//init the noteData structure
-void initOutputStats(nodeData *node, int dim)
-{
-    node->node=0.0;
-    node->queue=0.0;
-    node->service=0.0;
-    node->index=0;
-    node->serverNumber=dim;
-}
 
 //for debug only
 void printStats(nodeData appoggio){
     printf("\nfor %d jobs\n", appoggio.index);
-   // printf("   average interarrival time = %6.2f\n", t.last / appoggio.index);
     printf("   average wait ............ = %6.2f\n", appoggio.node / appoggio.index);
     printf("   average delay ........... = %6.2f\n", appoggio.queue / appoggio.index);
     printf("   average service time .... = %6.2f\n", appoggio.service / appoggio.index);
@@ -178,65 +77,11 @@ void printStats(nodeData appoggio){
     printf("   statistiche.current= %6.2f\n   ",appoggio.current);
     printf("   utilization ............. = %6.2f\n", (appoggio.service/appoggio.serverNumber) / appoggio.current);
 }
-void writeStats(output out[],nodeData appoggio,int i){
 
 
-    out[i].job+=appoggio.index/numBatch;
-    out[i].wait+=(appoggio.node / appoggio.index)/numBatch;
-    out[i].delay+=(appoggio.queue / appoggio.index)/numBatch;
-    out[i].service+=(appoggio.service / appoggio.index)/numBatch;
-    out[i].numberNode+=(appoggio.node / appoggio.current)/numBatch;
-    out[i].numberQueue+=(appoggio.queue / appoggio.current)/numBatch;
-    out[i].utilization+=((appoggio.service/appoggio.serverNumber) / appoggio.current)/numBatch;
-}
-
-
-//stats updater for each step
-void statsUpdater(nodeData *node, int num, double current, double next){
-    node->node  += (next - current) * num;
-    if(num>node->serverNumber)
-        node->service += (next - current)*node->serverNumber;
-    else
-        node->service += (next - current)*num;
-    node->current=current;
-    if(num>node->serverNumber-1)
-        node->queue   += (next - current) * (num - node->serverNumber);
-}
-
-//single queue stats updater
-void partialStatsUpdater(nodeData *node, int num, int servers, double current, double next){
-    node->node += (next - current) * num;
-    node->service += (next - current)*servers;
-    node->current=current;
-    if(num>servers-1)
-        node->queue += (next - current) * (num - servers);
-}
-
-//initialize each server metadata
-void initServerData(multiserver *server, int dim){
-    for(int i=0; i<dim; i++){
-        server[i].occupied=0;
-        server[i].service=INF;
-        server[i].color=none;
-    }
-}
-
-//@added!!
-void modifyServerData(multiserver *server, double service, int occupied){
-    server->service=service;
-    server->occupied=occupied;
-}
-
-void modifyServerDataColor(multiserver *server, double service, int occupied, color color){
-    modifyServerData(server, service, occupied);
-    server->color=color;
-}
-
-int simulatore(output out[],double stop,int batch){
-
-    STOP=stop;
-    INF=STOP*100.00;
-    numBatch=batch;
+int simulatore(output matrix[][12],int iteration, int finite){
+    int currentJob=0;
+    int currentBatch=0;
 
     nodeData triageStats;
     nodeData redCodeStats;
@@ -323,14 +168,13 @@ int simulatore(output out[],double stop,int batch){
     t.medicalCompletion=-1;
     t.minorCompletion=-1;
     t.current=START;
-    t.last=START;   //per statistiche non serve
+    //t.last=START;   //per statistiche non serve TODO cancellare
 
     //@improved while condition
-    while(t.arrival<STOP || 
-    (triageNumber+redNumber+traumaYellowNumber+
+    while((finite && t.arrival<STOP) || (!finite && (currentBatch!=numBatch || currentJob!=numJobInBatch)) ||
+    (finite && triageNumber+redNumber+traumaYellowNumber+
     traumaGreenNumber+minorYellowNumber+minorGreenNumber+
     minorWhiteNumber+medicalYellowNumber+medicalGreenNumber)>0){
-        
         t.next=getSpecificMin(t.arrival, triage, SERVERSTRIAGE);
         t.next=getSpecificMin(t.next, redCode, SERVERSRED);
         t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
@@ -360,21 +204,21 @@ int simulatore(output out[],double stop,int batch){
 
         if(minorWhiteNumber>0) partialStatsUpdater(&whiteMinorStats,minorWhiteNumber,minorInServiceWhite,t.current,t.next);
     
-        t.current=t.next;    //not needed?
-        /*
-        if( condizione da stabilire ){
-            writeStats(out,triageStats,0);
-            writeStats(out,redCodeStats,1);
-            writeStats(out,traumaStats,2);
-            writeStats(out,minorStats,3);
-            writeStats(out,medicalStats,4);
-            writeStats(out,yellowTraumaStats,5);
-            writeStats(out,greenTraumaStats,6);
-            writeStats(out,yellowMinorStats,7);
-            writeStats(out,greenMinorStats,8);
-            writeStats(out,whiteMinorStats,9);
-            writeStats(out,yellowMedicalStats,10);
-            writeStats(out,greenMedicalStats,11);
+        t.current=t.next;
+        
+        if(!finite && numJobInBatch==currentJob){
+            writeStats(matrix[currentBatch],triageStats,0);
+            writeStats(matrix[currentBatch],redCodeStats,1);
+            writeStats(matrix[currentBatch],traumaStats,2);
+            writeStats(matrix[currentBatch],minorStats,3);
+            writeStats(matrix[currentBatch],medicalStats,4);
+            writeStats(matrix[currentBatch],yellowTraumaStats,5);
+            writeStats(matrix[currentBatch],greenTraumaStats,6);
+            writeStats(matrix[currentBatch],yellowMinorStats,7);
+            writeStats(matrix[currentBatch],greenMinorStats,8);
+            writeStats(matrix[currentBatch],whiteMinorStats,9);
+            writeStats(matrix[currentBatch],yellowMedicalStats,10);
+            writeStats(matrix[currentBatch],greenMedicalStats,11);
 
 
 
@@ -393,8 +237,10 @@ int simulatore(output out[],double stop,int batch){
             initOutputStats(&yellowMinorStats, SERVERSMINOR);
             initOutputStats(&greenMinorStats, SERVERSMINOR);
             initOutputStats(&whiteMinorStats, SERVERSMINOR);
+            currentBatch++;
+            currentJob=0;
         }
-        */
+        
 
 
         /* process an arrival */
@@ -403,8 +249,7 @@ int simulatore(output out[],double stop,int batch){
             triageStats.index++;
 
             t.arrival=getArrival();
-            if(t.arrival>STOP){
-                t.last=t.current;
+            if(finite && t.arrival>STOP){
                 t.arrival=INF;
             }
             if(triageNumber<=SERVERSTRIAGE){
@@ -450,6 +295,7 @@ int simulatore(output out[],double stop,int batch){
                         p = Uniform(0,100);
                         if(p<5.2){              
                             redNumber--;
+                            currentJob++;
                         }
                     }
                     break;
@@ -556,6 +402,8 @@ int simulatore(output out[],double stop,int batch){
 
             /* trauma server completion */
             else if(t.traumaCompletion>-1 && t.current==trauma[t.traumaCompletion].service){
+                currentJob++;
+                //if(!finite) printf("TRAUMA\n");
                 if(trauma[t.traumaCompletion].color==yellow){
                     traumaYellowNumber--;
                     traumaInServiceYellow--;
@@ -585,6 +433,8 @@ int simulatore(output out[],double stop,int batch){
 
             /* medical server completion */
             else if(t.medicalCompletion>-1 && t.current==medical[t.medicalCompletion].service){
+                currentJob++;
+                //if(!finite) printf("MEDICAL\n");
                 if(medical[t.medicalCompletion].color==yellow){
                     medicalYellowNumber--;
                     medicalInServiceYellow--;
@@ -613,6 +463,8 @@ int simulatore(output out[],double stop,int batch){
 
             /* minor problems server completion */
             else if(t.minorCompletion>-1 && t.current==minor[t.minorCompletion].service){
+                currentJob++;
+                //if(!finite) printf("MINOR\n");
                 if(minor[t.minorCompletion].color==yellow){
                     minorYellowNumber--;
                     minorInServiceYellow--;
@@ -649,6 +501,8 @@ int simulatore(output out[],double stop,int batch){
 
             /* red code queue completion */
             else if(t.redCodeCompletion>-1 && t.current==redCode[t.redCodeCompletion].service){
+                currentJob++;
+                //if(!finite) printf("RED\n");
                 redNumber--;
                 if(redNumber-SERVERSRED>=0){
                     modifyServerData(&redCode[t.redCodeCompletion], t.current+getService(redParams), 1);
@@ -664,19 +518,19 @@ int simulatore(output out[],double stop,int batch){
 
     }
     //debug
-    writeStats(out,triageStats,0);
-    writeStats(out,redCodeStats,1);
-    writeStats(out,traumaStats,2);
-    writeStats(out,minorStats,3);
-    writeStats(out,medicalStats,4);
+    writeStats(matrix[iteration],triageStats,0);
+    writeStats(matrix[iteration],redCodeStats,1);
+    writeStats(matrix[iteration],traumaStats,2);
+    writeStats(matrix[iteration],minorStats,3);
+    writeStats(matrix[iteration],medicalStats,4);
 
-    writeStats(out,yellowTraumaStats,5);
-    writeStats(out,greenTraumaStats,6);
-    writeStats(out,yellowMinorStats,7);
-    writeStats(out,greenMinorStats,8);
-    writeStats(out,whiteMinorStats,9);
-    writeStats(out,yellowMedicalStats,10);
-    writeStats(out,greenMedicalStats,11);
+    writeStats(matrix[iteration],yellowTraumaStats,5);
+    writeStats(matrix[iteration],greenTraumaStats,6);
+    writeStats(matrix[iteration],yellowMinorStats,7);
+    writeStats(matrix[iteration],greenMinorStats,8);
+    writeStats(matrix[iteration],whiteMinorStats,9);
+    writeStats(matrix[iteration],yellowMedicalStats,10);
+    writeStats(matrix[iteration],greenMedicalStats,11);
     return 0;
 }
 

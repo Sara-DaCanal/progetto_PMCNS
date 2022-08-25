@@ -1,8 +1,7 @@
 //
-//  Main.h
+//  Simulatore.h
 //  Simulatore_ProntoSoccorso
 //
-//  Created by Matteo Federico on 12/05/22.
 //
 
 #ifndef Simulatore_h
@@ -10,6 +9,7 @@
 
 #include <stdio.h>
 #define SEED 123456789
-int simulatore(output out[],double stop,int batch);
+
+int simulatore(output matrix[][12], int iteration, int finite);
 
 #endif

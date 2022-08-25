@@ -10,6 +10,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <dirent.h>
 
 #include "Main.h"
 #include "libreriaRand/rngs.h" //spostare le librerie
@@ -19,7 +22,7 @@
 
 #define N 64
 #define ALFA 0.04
-void azzeraOutput(output matrix[N][12]){
+void azzeraOutput(output matrix[][12]){
 	for(int i=0;i<N;i++)
 	{
 		for(int j=0;j<12;j++){
@@ -86,18 +89,10 @@ void media(output matrix[N][12], double med[7][12])
 		med[4][j]=somma5[j]/N;
 		med[5][j]=somma6[j]/N;
 		med[6][j]=somma7[j]/N;
-		printf("j=%d]-------------------------\n",j);
-		printf("1] wait %f\n",med[0][j]);
-		printf("2] delay %f\n",med[1][j]);
-		printf("3] service %f\n",med[2][j]);
-		printf("4] numberNode %f\n",med[3][j]);
-		printf("5] numberQueue %f\n",med[4][j]);
-		printf("6] utilization %f\n",med[5][j]);
-		printf("7] job %f \n", med[6][j]);
 	}
 }
 
-void varianza(output matrix[N][12],double med[7][12],double var[7][12],double omega[7][12])
+void varianza(output matrix[][12],double med[7][12],double var[7][12],double omega[7][12])
 {
 	double tstar=idfStudent(N-1,1-ALFA/2);
 	double somma1[12];
@@ -158,24 +153,14 @@ void varianza(output matrix[N][12],double med[7][12],double var[7][12],double om
 		omega[4][j]=tstar*sqrt(var[4][j])/sqrt(N-1);
 		omega[5][j]=tstar*sqrt(var[5][j])/sqrt(N-1);
 		omega[6][j]=tstar*sqrt(var[6][j])/sqrt(N-1);
-		printf("Omega\n");
-		printf("j=%d]-------------------------\n",j);
-		printf("1] wait %f\n",omega[0][j]);
-		printf("2] delay %f\n",omega[1][j]);
-		printf("3] service %f\n",omega[2][j]);
-		printf("4] numberNode %f\n",omega[3][j]);
-		printf("5] numberQueue %f\n",omega[4][j]);
-		printf("6] utilization %f\n",omega[5][j]);
-		printf("7] job %f \n", omega[6][j]);
-
-		printf("j=%d]-------------------------\n",j);
-		printf("1] wait %f\n",var[0][j]);
-		printf("2] delay %f\n",var[1][j]);
-		printf("3] service %f\n",var[2][j]);
-		printf("4] numberNode %f\n",var[3][j]);
-		printf("5] numberQueue %f\n",var[4][j]);
-		printf("6] utilization %f\n",var[5][j]);
-		printf("7] job %f \n", var[6][j]);
+		printf("\n");
+		printf("\t wait %f ± %f\n",med[0][j],omega[0][j]);
+		printf("\t delay %f ± %f\n",med[1][j],omega[1][j]);
+		printf("\t service %f ± %f\n",med[2][j],omega[2][j]);
+		printf("\t numberNode %f ± %f\n",med[3][j],omega[3][j]);
+		printf("\t numberQueue %f ± %f\n",med[4][j],omega[4][j]);
+		printf("\t utilization %f ± %f\n",med[5][j],omega[5][j]);
+		printf("\t job %f ± %f\n",med[6][j],omega[6][j]);
 	}
 }
 void incrementalMean(output matrix[N][12],int j, int i, output *out){
@@ -207,14 +192,20 @@ void incrementalMean(output matrix[N][12],int j, int i, output *out){
 	out->utilization=sum_u/(i+1);
 	out->job=sum_j/(i+1);
 }
-void writeFileCSV(output matrix[N][12]){
-	if(mkdir("./statistiche",0777)<0)
-	{
-		printf("error\n");
-		//exit(-1);
+void writeFileCSV(output matrix[N][12], char *path){
+	DIR *dir=opendir("./statistiche");
+	if(dir){
+		closedir(dir);
+	}
+	else if(ENOENT==errno){
+		if(mkdir("./statistiche",0777)<0)
+		{
+			printf("error\n");
+			exit(-1);
+		}
 	}
 	output out;
-	FILE* file=fopen("./statistiche/transiente.csv","w+");
+	FILE* file=fopen(path,"w+");
 	if(file==NULL)
 	{
 		printf("error\n");
@@ -227,10 +218,14 @@ void writeFileCSV(output matrix[N][12]){
 			fprintf(file, "%d,%d,%f,%f,%f,%f,%f,%f,%f\n",j,i,out.wait,out.delay,out.service,out.numberNode,out.numberQueue,out.utilization,out.job);
 		}
 	}
+	fclose(file);
 
 }
 int main(){ 
 	//simulazione del transiente
+	printf("\n\n\n\t---------------------------------\n");
+	printf("\t*** FINITE HORIZON SIMULATION ***\n");
+	printf("\t---------------------------------\n");
 	output matrix[N][12];
 	double med[7][12];
 	double var[7][12];
@@ -238,13 +233,20 @@ int main(){
 	PlantSeeds(SEED);
 	azzeraOutput(matrix);
 	for(int i=0;i<N;i++){
-		simulatore(matrix[i],1440.0,1);	
+		simulatore(matrix,i,1);	
 	}
-	writeFileCSV(matrix);
+	writeFileCSV(matrix, "./statistiche/transiente.csv");
 	media(matrix,med);
 	varianza(matrix,med,var,omega);
 	//simulazione dello stazionario
-
+	printf("\n\n\n\t-----------------------------------\n");
+	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
+	printf("\t-----------------------------------\n");
+	azzeraOutput(matrix);
+	simulatore(matrix, 63, 0);
+	writeFileCSV(matrix, "./statistiche/steady_state.csv");
+	media(matrix,med);
+	varianza(matrix,med,var,omega);
 
 
 	return 0;

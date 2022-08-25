@@ -8,7 +8,8 @@ all: $(OBJFILES)
 
 progetto: 
 	gcc -g -O -c Simulatore.c
-	gcc -o main Main.c -lm Simulatore.o libreriaRand/rngs.o libreriaRand/rvms.o
+	gcc -g -O -c librerieProgetto/utils.c
+	gcc -o main Main.c -lm Simulatore.o utils.o libreriaRand/rngs.o libreriaRand/rvms.o
 	./main
 clean:
 	/bin/rm -f $(OBJFILES) core*
