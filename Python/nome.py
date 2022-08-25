@@ -82,6 +82,7 @@ def graficiTempoFinito(path):
 		ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(1, 0.5))
 		
 		plt.show()
+		
 graficiTempoFinito(pathTransiente)
 
 '''
