@@ -13,8 +13,8 @@ theoricNum_Queue=[]
 theoricRho=[0.45,0.10,0.59565,0.790137,0.73029,0.23259,0.45711,0.12139,0.40052,0.26946,0.16986,0.56043]
 theoricJob=[]
 pathTransiente="./../Simulatore_ProntoSoccorso/statistiche/transiente.csv"
-
-def graficiTempoFinito(path):
+pathStazionario="./../Simulatore_ProntoSoccorso/statistiche/steady_state.csv"
+def grafici(path):
 	csvFile = open(path,newline="\n")
 	spamreader = csv.reader(csvFile, delimiter=',');
 	delay=[];
@@ -83,8 +83,8 @@ def graficiTempoFinito(path):
 		
 		plt.show()
 		
-graficiTempoFinito(pathTransiente)
-
+grafici(pathTransiente)
+grafici(pathStazionario)
 '''
 x=f.read().split()
 for string in x:
