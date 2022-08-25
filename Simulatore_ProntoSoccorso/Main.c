@@ -18,10 +18,9 @@
 #include "libreriaRand/rngs.h" //spostare le librerie
 #include "libreriaRand/rvms.h" 
 #include "librerieProgetto/struct.h"
+#include "librerieProgetto/utils.h"
 #include "Simulatore.h"
 
-#define N 64
-#define ALFA 0.04
 void azzeraOutput(output matrix[][12]){
 	for(int i=0;i<N;i++)
 	{
@@ -243,7 +242,7 @@ int main(){
 	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
 	printf("\t-----------------------------------\n");
 	azzeraOutput(matrix);
-	simulatore(matrix, 63, 0);
+	simulatore(matrix, numBatch-1, 0);
 	writeFileCSV(matrix, "./statistiche/steady_state.csv");
 	media(matrix,med);
 	varianza(matrix,med,var,omega);

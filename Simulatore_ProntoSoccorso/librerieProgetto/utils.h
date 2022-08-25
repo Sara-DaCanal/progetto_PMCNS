@@ -6,6 +6,8 @@
 #define INF pow(1.79769, 308.0)
 #define numBatch 64
 #define numJobInBatch 1024
+#define N 64
+#define ALFA 0.04
 
 double Exponential(double m);
 double Uniform(double a, double b);
