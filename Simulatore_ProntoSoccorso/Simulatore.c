@@ -79,7 +79,7 @@ void printStats(nodeData appoggio){
 }
 
 
-int simulatore(output matrix[][12],int iteration, int finite){
+int simulatore(output matrix[][15],int iteration, int finite){
     int currentJob=0;
     int currentBatch=0;
 

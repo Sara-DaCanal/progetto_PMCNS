@@ -21,10 +21,10 @@
 #include "librerieProgetto/utils.h"
 #include "Simulatore.h"
 
-void azzeraOutput(output matrix[][12]){
+void azzeraOutput(output matrix[][15],int dim){
 	for(int i=0;i<N;i++)
 	{
-		for(int j=0;j<12;j++){
+		for(int j=0;j<dim;j++){
 			matrix[i][j].wait=0.0;
 			matrix[i][j].delay=0.0;
 			matrix[i][j].service=0.0;
@@ -36,17 +36,17 @@ void azzeraOutput(output matrix[][12]){
 	}
 
 }
-void media(output matrix[N][12], double med[7][12])
+void media(output matrix[N][15], double med[7][15],int dim)
 {
-	double somma1[12];
-	double somma2[12];
-	double somma3[12];
-	double somma4[12];
-	double somma5[12];
-	double somma6[12];
-	double somma7[12];
+	double somma1[dim];
+	double somma2[dim];
+	double somma3[dim];
+	double somma4[dim];
+	double somma5[dim];
+	double somma6[dim];
+	double somma7[dim];
 
-	for(int j=0;j<12;j++)
+	for(int j=0;j<dim;j++)
 	{
 		somma1[j]=0.0;
 		somma2[j]=0.0;
@@ -91,20 +91,20 @@ void media(output matrix[N][12], double med[7][12])
 	}
 }
 
-void varianza(output matrix[][12],double med[7][12],double var[7][12],double omega[7][12])
+void varianza(output matrix[][15],double med[7][15],double var[7][15],double omega[7][15],int dim)
 {
 	double tstar=idfStudent(N-1,1-ALFA/2);
-	double somma1[12];
-	double somma2[12];
-	double somma3[12];
-	double somma4[12];
-	double somma5[12];
-	double somma6[12];
-	double somma7[12];
+	double somma1[dim];
+	double somma2[dim];
+	double somma3[dim];
+	double somma4[dim];
+	double somma5[dim];
+	double somma6[dim];
+	double somma7[dim];
 	int n1=0;
 	int n2=0;
 	int n3=0;
-	for(int j=0;j<12;j++)
+	for(int j=0;j<dim;j++)
 	{
 		somma1[j]=0.0;
 		somma2[j]=0.0;
@@ -162,7 +162,7 @@ void varianza(output matrix[][12],double med[7][12],double var[7][12],double ome
 		printf("\t job %f ± %f\n",med[6][j],omega[6][j]);
 	}
 }
-void incrementalMean(output matrix[N][12],int j, int i, output *out){
+void incrementalMean(output matrix[N][15],int j, int i, output *out){
 	double sum_w=0.0;
 	double sum_d=0.0;
 	double sum_s=0.0;
@@ -191,7 +191,7 @@ void incrementalMean(output matrix[N][12],int j, int i, output *out){
 	out->utilization=sum_u/(i+1);
 	out->job=sum_j/(i+1);
 }
-void writeFileCSV(output matrix[N][12], char *path){
+void writeFileCSV(output matrix[N][15], char *path,int dim){
 	DIR *dir=opendir("./statistiche");
 	if(dir){
 		closedir(dir);
@@ -211,7 +211,7 @@ void writeFileCSV(output matrix[N][12], char *path){
 		exit(-1);
 	}
 	fprintf(file, "j,i,wait,delay,service,n_node,n_queue,rho,job\n");
-	for(int j=0;j<12;j++){
+	for(int j=0;j<dim;j++){
 		for(int i=0;i<N;i++){
 			incrementalMean(matrix,j,i,&out);
 			fprintf(file, "%d,%d,%f,%f,%f,%f,%f,%f,%f\n",j,i,out.wait,out.delay,out.service,out.numberNode,out.numberQueue,out.utilization,out.job);
@@ -220,34 +220,65 @@ void writeFileCSV(output matrix[N][12], char *path){
 	fclose(file);
 
 }
+
+
 int main(){ 
 	//simulazione del transiente
 	printf("\n\n\n\t---------------------------------\n");
 	printf("\t*** FINITE HORIZON SIMULATION ***\n");
 	printf("\t---------------------------------\n");
-	output matrix[N][12];
-	double med[7][12];
-	double var[7][12];
-	double omega[7][12];
+	output matrix[N][15];
+	double med[7][15];
+	double var[7][15];
+	double omega[7][15];
 	PlantSeeds(SEED);
-	azzeraOutput(matrix);
+	azzeraOutput(matrix,12);
 	for(int i=0;i<N;i++){
 		simulatore(matrix,i,1);	
 	}
-	writeFileCSV(matrix, "./statistiche/transiente.csv");
-	media(matrix,med);
-	varianza(matrix,med,var,omega);
+	writeFileCSV(matrix, "./statistiche/transiente.csv",12);
+	media(matrix,med,12);
+	varianza(matrix,med,var,omega,12);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
 	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
 	printf("\t-----------------------------------\n");
-	azzeraOutput(matrix);
+	PlantSeeds(SEED);
+	azzeraOutput(matrix,12);
 	simulatore(matrix, numBatch-1, 0);
-	writeFileCSV(matrix, "./statistiche/steady_state.csv");
-	media(matrix,med);
-	varianza(matrix,med,var,omega);
+	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
+	media(matrix,med,12);
+	varianza(matrix,med,var,omega,12);
 
 
+
+
+	//simulazione del transiente
+	printf("\n\n\n\t---------------------------------\n");
+	printf("\t*** FINITE HORIZON SIMULATION ***\n");
+	printf("\t---------------------------------\n");
+	output matrix2[N][15];
+	double med2[7][15];
+	double var2[7][15];
+	double omega2[7][15];
+	PlantSeeds(SEED);
+	azzeraOutput(matrix2,15);
+	for(int i=0;i<N;i++){
+		simulatore2(matrix2,i,1);	
+	}
+	writeFileCSV(matrix2, "./statistiche/transiente_migliorato.csv",15);
+	media(matrix2,med2,15);
+	varianza(matrix2,med2,var2,omega2,15);
+	//simulazione dello stazionario
+	printf("\n\n\n\t-----------------------------------\n");
+	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
+	printf("\t-----------------------------------\n");
+	PlantSeeds(SEED);
+	azzeraOutput(matrix2,15);
+	simulatore2(matrix2, numBatch-1, 0);
+	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
+	media(matrix2,med2,15);
+	varianza(matrix2,med2,var2,omega2,15);
 	return 0;
 }
 

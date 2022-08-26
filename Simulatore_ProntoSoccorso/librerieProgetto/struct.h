@@ -46,6 +46,8 @@ typedef enum color{
     white,
     green,
     yellow,
+    orange,
+    blue,
     red,
     none
 } color;
