@@ -149,3 +149,12 @@ void modifyServerDataColor(multiserver *server, double service, int occupied, co
     modifyServerData(server, service, occupied);
     server->color=color;
 }
+
+int condizioneBatchMeans(int v[5],int n){
+
+    for (int i = 0; i < 5; i++)
+    {
+        if(v[i]<n) return 1;
+    }
+return 0;
+}

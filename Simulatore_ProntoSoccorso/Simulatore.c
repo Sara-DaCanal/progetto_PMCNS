@@ -80,8 +80,8 @@ void printStats(nodeData appoggio){
 
 
 int simulatore(output matrix[][15],int iteration, int finite){
-    int currentJob=0;
-    int currentBatch=0;
+    int currentJob[5]={0,0,0,0,0};
+    int currentBatch[5]={0,0,0,0,0};
 
     nodeData triageStats;
     nodeData redCodeStats;
@@ -171,7 +171,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
     //t.last=START;   //per statistiche non serve TODO cancellare
 
     //@improved while condition
-    while((finite && t.arrival<STOP) || (!finite && (currentBatch!=numBatch || currentJob!=numJobInBatch)) ||
+    while((finite && t.arrival<STOP) || (!finite && (condizioneBatchMeans(currentBatch,numBatch) || condizioneBatchMeans(currentJob,numJobInBatch))) ||
     (finite && triageNumber+redNumber+traumaYellowNumber+
     traumaGreenNumber+minorYellowNumber+minorGreenNumber+
     minorWhiteNumber+medicalYellowNumber+medicalGreenNumber)>0){
@@ -179,88 +179,120 @@ int simulatore(output matrix[][15],int iteration, int finite){
         t.next=getSpecificMin(t.next, redCode, SERVERSRED);
         t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
         t.next=getSpecificMin(t.next, medical, SERVERSMEDICAL); 
-        t.next=getSpecificMin(t.next, minor, SERVERSMINOR);    
-        if(triageNumber>0)  statsUpdater(&triageStats,triageNumber,t.current,t.next);
+        t.next=getSpecificMin(t.next, minor, SERVERSMINOR);
+
+        if((finite && triageNumber>0) || (!finite && triageNumber>0 && (currentBatch[0]<numBatch || currentJob[0]<numJobInBatch)))  statsUpdater(&triageStats,triageNumber,t.current,t.next);
             
-        if(redNumber>0)   statsUpdater(&redCodeStats,redNumber,t.current,t.next);
+        if((finite && redNumber>0) || (!finite && redNumber>0 && (currentBatch[1]<numBatch || currentJob[1]<numJobInBatch)))  statsUpdater(&redCodeStats,redNumber,t.current,t.next);
 
-        if(traumaYellowNumber+traumaGreenNumber>0)  statsUpdater(&traumaStats,traumaYellowNumber+traumaGreenNumber,t.current,t.next);
+        if((traumaYellowNumber+traumaGreenNumber>0) || (!finite && traumaYellowNumber+traumaGreenNumber>0 && (currentBatch[2]<numBatch || currentJob[2]<numJobInBatch)))  statsUpdater(&traumaStats,traumaYellowNumber+traumaGreenNumber,t.current,t.next);
 
-        if(medicalYellowNumber+medicalGreenNumber>0)  statsUpdater(&medicalStats,medicalYellowNumber+medicalGreenNumber,t.current,t.next);
+        if((medicalYellowNumber+medicalGreenNumber>0) || (!finite && medicalYellowNumber+medicalGreenNumber>0 && (currentBatch[4]<numBatch || currentJob[4]<numJobInBatch)))  statsUpdater(&medicalStats,medicalYellowNumber+medicalGreenNumber,t.current,t.next);
 
-        if(minorYellowNumber+minorGreenNumber+minorWhiteNumber>0)  statsUpdater(&minorStats,minorYellowNumber+minorGreenNumber+minorWhiteNumber,t.current,t.next);
+        if((minorYellowNumber+minorGreenNumber+minorWhiteNumber>0) || (!finite && minorYellowNumber+minorGreenNumber+minorWhiteNumber>0 && (currentBatch[3]<numBatch || currentJob[3]<numJobInBatch)))  statsUpdater(&minorStats,minorYellowNumber+minorGreenNumber+minorWhiteNumber,t.current,t.next);
 
-        if(traumaYellowNumber>0) partialStatsUpdater(&yellowTraumaStats, traumaYellowNumber, traumaInServiceYellow, t.current, t.next);
+        if(traumaYellowNumber>0 || (!finite && traumaYellowNumber>0 && (currentBatch[2]<numBatch || currentJob[2]<numJobInBatch))) partialStatsUpdater(&yellowTraumaStats, traumaYellowNumber, traumaInServiceYellow, t.current, t.next);
 
-        if(traumaGreenNumber>0) partialStatsUpdater(&greenTraumaStats, traumaGreenNumber, traumaInServiceGreen, t.current, t.next);
+        if(traumaGreenNumber>0 || (!finite && traumaGreenNumber>0 && (currentBatch[2]<numBatch || currentJob[2]<numJobInBatch))) partialStatsUpdater(&greenTraumaStats, traumaGreenNumber, traumaInServiceGreen, t.current, t.next);
 
-        if(medicalYellowNumber>0) partialStatsUpdater(&yellowMedicalStats, medicalYellowNumber, medicalInServiceYellow, t.current, t.next);
+        if(medicalYellowNumber>0 || (!finite && medicalYellowNumber>0 && (currentBatch[4]<numBatch || currentJob[4]<numJobInBatch))) partialStatsUpdater(&yellowMedicalStats, medicalYellowNumber, medicalInServiceYellow, t.current, t.next);
 
-        if(medicalGreenNumber>0) partialStatsUpdater(&greenMedicalStats, medicalGreenNumber, medicalInServiceGreen, t.current, t.next);
+        if(medicalGreenNumber>0 || (!finite && medicalGreenNumber>0 && (currentBatch[4]<numBatch || currentJob[4]<numJobInBatch))) partialStatsUpdater(&greenMedicalStats, medicalGreenNumber, medicalInServiceGreen, t.current, t.next);
         
-        if(minorYellowNumber>0) partialStatsUpdater(&yellowMinorStats,minorYellowNumber, minorInServiceYellow, t.current,t.next);
+        if(minorYellowNumber>0 || (!finite && minorYellowNumber>0 && (currentBatch[3]<numBatch || currentJob[3]<numJobInBatch))) partialStatsUpdater(&yellowMinorStats,minorYellowNumber, minorInServiceYellow, t.current,t.next);
         
-        if(minorGreenNumber>0) partialStatsUpdater(&greenMinorStats,minorGreenNumber,minorInServiceGreen,t.current,t.next);
+        if(minorGreenNumber>0 || (!finite && minorGreenNumber>0 && (currentBatch[3]<numBatch || currentJob[3]<numJobInBatch))) partialStatsUpdater(&greenMinorStats,minorGreenNumber,minorInServiceGreen,t.current,t.next);
 
-        if(minorWhiteNumber>0) partialStatsUpdater(&whiteMinorStats,minorWhiteNumber,minorInServiceWhite,t.current,t.next);
+        if(minorWhiteNumber>0 || (!finite && minorWhiteNumber>0 && (currentBatch[3]<numBatch || currentJob[3]<numJobInBatch))) partialStatsUpdater(&whiteMinorStats,minorWhiteNumber,minorInServiceWhite,t.current,t.next);
     
         t.current=t.next;
         
-        if(!finite && numJobInBatch==currentJob){
-            writeStats(matrix[currentBatch],triageStats,0);
-            writeStats(matrix[currentBatch],redCodeStats,1);
-            writeStats(matrix[currentBatch],traumaStats,2);
-            writeStats(matrix[currentBatch],minorStats,3);
-            writeStats(matrix[currentBatch],medicalStats,4);
-            writeStats(matrix[currentBatch],yellowTraumaStats,5);
-            writeStats(matrix[currentBatch],greenTraumaStats,6);
-            writeStats(matrix[currentBatch],yellowMinorStats,7);
-            writeStats(matrix[currentBatch],greenMinorStats,8);
-            writeStats(matrix[currentBatch],whiteMinorStats,9);
-            writeStats(matrix[currentBatch],yellowMedicalStats,10);
-            writeStats(matrix[currentBatch],greenMedicalStats,11);
+        if(!finite)
+        {
+            if(numJobInBatch==currentJob[0] && currentBatch[0]<numBatch)
+            {
+                writeStats(matrix[currentBatch[0]],triageStats,0);
+                initOutputStats(&triageStats,SERVERSTRIAGE);
+                initTime(&triageStats,t.current); 
+                currentJob[0]=0;
+                currentBatch[0]++; 
 
+            }
+            if(numJobInBatch==currentJob[1]&& currentBatch[1]<numBatch)
+            {
+                writeStats(matrix[currentBatch[1]],redCodeStats,1);
+                initOutputStats(&redCodeStats,SERVERSRED);
+                initTime(&redCodeStats,t.current); 
+                currentJob[1]=0;
+                currentBatch[1]++;  
+            }
 
-
-            initOutputStats(&triageStats,SERVERSTRIAGE);
-            initTime(&triageStats,t.current);
-            initOutputStats(&redCodeStats,SERVERSRED);
-            initTime(&redCodeStats,t.current);
-            initOutputStats(&traumaStats,SERVERSTRAUMA);
-            initTime(&traumaStats,t.current);
-            initOutputStats(&medicalStats,SERVERSMEDICAL);
-            initTime(&medicalStats,t.current);
-            initOutputStats(&minorStats,SERVERSMINOR);
-            initTime(&minorStats,t.current);
-            //partial statistic
-            initOutputStats(&yellowTraumaStats, SERVERSTRAUMA);
-            initTime(&yellowTraumaStats,t.current);
-            initOutputStats(&greenTraumaStats, SERVERSTRAUMA);
-            initTime(&greenTraumaStats,t.current);
-
-            initOutputStats(&yellowMedicalStats, SERVERSMEDICAL);
-            initTime(&yellowMedicalStats,t.current);
-            initOutputStats(&greenMedicalStats, SERVERSMEDICAL);
-            initTime(&greenMedicalStats,t.current);
-
-            initOutputStats(&yellowMinorStats, SERVERSMINOR);
-            initTime(&yellowMinorStats,t.current);
-            initOutputStats(&greenMinorStats, SERVERSMINOR);
-            initTime(&greenMinorStats,t.current);
-            initOutputStats(&whiteMinorStats, SERVERSMINOR);
-            initTime(&whiteMinorStats,t.current);
+            if(numJobInBatch==currentJob[2]&& currentBatch[2]<numBatch)
+            {
+                writeStats(matrix[currentBatch[2]],traumaStats,2);
+                initOutputStats(&traumaStats,SERVERSTRAUMA);
+                initTime(&traumaStats,t.current); 
+                //partial
+                writeStats(matrix[currentBatch[2]],yellowTraumaStats,5);
+                writeStats(matrix[currentBatch[2]],greenTraumaStats,6);
+                initOutputStats(&yellowTraumaStats, SERVERSTRAUMA);
+                initTime(&yellowTraumaStats,t.current);
             
-            currentBatch++;
-            currentJob=0;
-        }
-        
+                initOutputStats(&greenTraumaStats, SERVERSTRAUMA);
+                initTime(&greenTraumaStats,t.current);
 
+                currentJob[2]=0;
+                currentBatch[2]++;  
+            }
+
+            if(numJobInBatch==currentJob[3]&& currentBatch[3]<numBatch)
+            {
+
+                writeStats(matrix[currentBatch[3]],minorStats,3);
+                initOutputStats(&minorStats,SERVERSMINOR);
+                initTime(&minorStats,t.current); 
+
+                //partial
+                writeStats(matrix[currentBatch[3]],yellowMinorStats,7);
+                writeStats(matrix[currentBatch[3]],greenMinorStats,8);
+                writeStats(matrix[currentBatch[3]],whiteMinorStats,9);
+                initOutputStats(&yellowMinorStats, SERVERSMINOR);
+                initTime(&yellowMinorStats,t.current);
+
+                initOutputStats(&greenMinorStats, SERVERSMINOR);
+                initTime(&greenMinorStats,t.current);
+
+                initOutputStats(&whiteMinorStats, SERVERSMINOR);
+                initTime(&whiteMinorStats,t.current);
+                currentJob[3]=0;
+                currentBatch[3]++;  
+            }
+            if(numJobInBatch==currentJob[4]&& currentBatch[4]<numBatch)
+            {
+                 //total
+                writeStats(matrix[currentBatch[4]],medicalStats,4);
+                initOutputStats(&medicalStats,SERVERSMEDICAL);
+                initTime(&medicalStats,t.current);
+                //partial
+                writeStats(matrix[currentBatch[4]],yellowMedicalStats,10);
+                writeStats(matrix[currentBatch[4]],greenMedicalStats,11);
+                
+                initOutputStats(&yellowMedicalStats, SERVERSMEDICAL);
+                initTime(&yellowMedicalStats,t.current);
+
+                initOutputStats(&greenMedicalStats, SERVERSMEDICAL);
+                initTime(&greenMedicalStats,t.current);
+                currentJob[4]=0;
+                currentBatch[4]++;  
+            }
+
+        }
 
         /* process an arrival */
         if(t.current==t.arrival){
             triageNumber++;
             triageStats.index++;
-
+            if(!finite && currentJob[0]>=numJobInBatch) triageStats.index--;
             t.arrival=getArrival();
             if(finite && t.arrival>STOP){
                 t.arrival=INF;
@@ -276,6 +308,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
         /* completion of the triage phase and transfer to the next phase */
         else if(t.triageCompletion>-1 && t.current==triage[t.triageCompletion].service){
                 triageNumber--;
+                currentJob[0]++;
                 //@every server data modification replaced w function row 250
                 if(triageNumber-SERVERSTRIAGE>=0)
                     modifyServerData(&triage[t.triageCompletion], t.current+getService(triageParams), 1);                 
@@ -296,6 +329,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
                 case red:
                     redNumber++;
                     redCodeStats.index++;
+                    if(!finite && currentJob[1]>=numJobInBatch) redCodeStats.index--;
                     if(redNumber<=SERVERSRED){
                         int index=FindOne(redCode);
                         modifyServerData(&redCode[index], t.current+getService(redParams), 1); 
@@ -308,7 +342,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         p = Uniform(0,100);
                         if(p<5.2){              
                             redNumber--;
-                            currentJob++;
+                            currentJob[1]++;
                         }
                     }
                     break;
@@ -320,6 +354,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         traumaYellowNumber++;
                         traumaStats.index++;
                         yellowTraumaStats.index++;
+                        if(!finite && currentJob[2]>=numJobInBatch) traumaStats.index--;
+                        if(!finite && currentJob[2]>=numJobInBatch) yellowTraumaStats.index--;
                         if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
                             traumaInServiceYellow++;
                             int index = FindOne(trauma); //find a free server
@@ -331,6 +367,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         medicalYellowNumber++;
                         medicalStats.index++;
                         yellowMedicalStats.index++;
+                        if(!finite && currentJob[4]>=numJobInBatch) medicalStats.index--;
+                        if(!finite && currentJob[4]>=numJobInBatch) yellowMedicalStats.index--;
                         if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
                             medicalInServiceYellow++;
                             int index = FindOne(medical); 
@@ -342,6 +380,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         minorYellowNumber++; 
                         minorStats.index++;
                         yellowMinorStats.index++;
+                        if(!finite && currentJob[3]>=numJobInBatch) minorStats.index--;
+                        if(!finite && currentJob[3]>=numJobInBatch) yellowMinorStats.index--;
                         if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
                             minorInServiceYellow++;
                             int index = FindOne(minor); //find a free server
@@ -358,6 +398,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         traumaGreenNumber++;
                         traumaStats.index++;
                         greenTraumaStats.index++;
+                        if(!finite && currentJob[2]>=numJobInBatch) traumaStats.index--;
+                        if(!finite && currentJob[2]>=numJobInBatch) greenTraumaStats.index--;
                         if(traumaYellowNumber+traumaGreenNumber<=SERVERSTRAUMA){
                             if(traumaYellowNumber-traumaInServiceYellow==0){
                                 traumaInServiceGreen++;
@@ -371,6 +413,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         medicalGreenNumber++;
                         medicalStats.index++;
                         greenMedicalStats.index++;
+                        if(!finite && currentJob[4]>=numJobInBatch) medicalStats.index--;
+                        if(!finite && currentJob[4]>=numJobInBatch) greenMedicalStats.index--;
                         if(medicalYellowNumber+medicalGreenNumber<=SERVERSMEDICAL){
                             if(medicalYellowNumber-medicalInServiceYellow==0){
                                 medicalInServiceGreen++;
@@ -384,6 +428,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                         minorGreenNumber++; 
                         minorStats.index++;
                         greenMinorStats.index++;
+                        if(!finite && currentJob[3]>=numJobInBatch) minorStats.index--;
+                        if(!finite && currentJob[3]>=numJobInBatch) greenMinorStats.index--;
                         if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
                             if(minorYellowNumber-minorInServiceYellow==0){
                                 minorInServiceGreen++;
@@ -399,6 +445,8 @@ int simulatore(output matrix[][15],int iteration, int finite){
                     minorWhiteNumber++;
                     minorStats.index++;
                     whiteMinorStats.index++;
+                    if(!finite && currentJob[3]>=numJobInBatch) minorStats.index--;
+                    if(!finite && currentJob[3]>=numJobInBatch) whiteMinorStats.index--;
                     if(minorYellowNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
                         if((minorYellowNumber-minorInServiceYellow==0) && (minorGreenNumber-minorInServiceGreen==0)){
                             minorInServiceWhite++;
@@ -415,8 +463,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
 
             /* trauma server completion */
             else if(t.traumaCompletion>-1 && t.current==trauma[t.traumaCompletion].service){
-                currentJob++;
-                //if(!finite) printf("TRAUMA\n");
+                currentJob[2]++;                //if(!finite) printf("TRAUMA\n");
                 if(trauma[t.traumaCompletion].color==yellow){
                     traumaYellowNumber--;
                     traumaInServiceYellow--;
@@ -446,8 +493,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
 
             /* medical server completion */
             else if(t.medicalCompletion>-1 && t.current==medical[t.medicalCompletion].service){
-                currentJob++;
-                //if(!finite) printf("MEDICAL\n");
+                currentJob[4]++;
                 if(medical[t.medicalCompletion].color==yellow){
                     medicalYellowNumber--;
                     medicalInServiceYellow--;
@@ -476,8 +522,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
 
             /* minor problems server completion */
             else if(t.minorCompletion>-1 && t.current==minor[t.minorCompletion].service){
-                currentJob++;
-                //if(!finite) printf("MINOR\n");
+                currentJob[3]++;
                 if(minor[t.minorCompletion].color==yellow){
                     minorYellowNumber--;
                     minorInServiceYellow--;
@@ -514,8 +559,7 @@ int simulatore(output matrix[][15],int iteration, int finite){
 
             /* red code queue completion */
             else if(t.redCodeCompletion>-1 && t.current==redCode[t.redCodeCompletion].service){
-                currentJob++;
-                //if(!finite) printf("RED\n");
+                currentJob[1]++;
                 redNumber--;
                 if(redNumber-SERVERSRED>=0){
                     modifyServerData(&redCode[t.redCodeCompletion], t.current+getService(redParams), 1);
@@ -536,7 +580,6 @@ int simulatore(output matrix[][15],int iteration, int finite){
     writeStats(matrix[iteration],traumaStats,2);
     writeStats(matrix[iteration],minorStats,3);
     writeStats(matrix[iteration],medicalStats,4);
-
     writeStats(matrix[iteration],yellowTraumaStats,5);
     writeStats(matrix[iteration],greenTraumaStats,6);
     writeStats(matrix[iteration],yellowMinorStats,7);

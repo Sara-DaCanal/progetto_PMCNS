@@ -5,9 +5,9 @@
 #define STOP 1440.0
 #define INF pow(1.79769, 308.0)
 #define numBatch 64
-#define numJobInBatch 1024
+#define numJobInBatch 512
 #define N 64
-#define ALFA 0.04
+#define ALFA 0.05
 
 double Exponential(double m);
 double Uniform(double a, double b);
@@ -24,5 +24,7 @@ void initServerData(multiserver *server, int dim);
 void modifyServerData(multiserver *server, double service, int occupied);
 void modifyServerDataColor(multiserver *server, double service, int occupied, color color);
 void initTime(nodeData *node, double time);
+int condizioneBatchMeans(int v[5],int n);
+
 
 #endif
