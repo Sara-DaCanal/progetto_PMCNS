@@ -2,11 +2,13 @@ CC = gcc
 CFLAGS = -g -Wall
 LDFLAGS = -lm
 
-OBJFILES = rng.o rngs.o rvgs.o rvms.o 
+OBJFILES = rng.o rngs.o rvgs.o rvms.o
 
 all: $(OBJFILES)
 
 progetto:
+	gcc -g -O -o libreriaRand/rvms.o -c libreriaRand/rvms.c
+	gcc -g -O -o libreriaRand/rngs.o -c libreriaRand/rngs.c
 	gcc -g -O -c Simulatore.c
 	gcc -g -O -c Simulatore_Migliorato.c
 	gcc -g -O -c librerieProgetto/utils.c
