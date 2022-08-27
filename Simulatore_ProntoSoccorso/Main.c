@@ -33,10 +33,22 @@ void check(double media[7][15]){
 			sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
 	}
 	printf("\nil valore della soluzione é: %f\n",sum);
-	int sum1=420-SERVERSTRIAGE*10-SERVERSRED*40-SERVERSTRAUMA*30-SERVERSMEDICAL*30-SERVERSMINOR*20;
+	int sum1=65000-SERVERSTRIAGE*1700-SERVERSRED*7000-SERVERSTRAUMA*4200-SERVERSMEDICAL*4200-SERVERSMINOR*2800;
 	printf("il Resto del budget é: %d\n",sum1);
 }
+void check1(double media[7][15]){
 
+	double vettorePesi[15]={3.0,10.0,0.0,0.0,0.0,5.0,3.0,2.0,3.5,2.5,2.0,1.0,4.0,3.0,2.0};
+	double vettoreTempiPrevisti[15]={3.0,0.0,0.0,0.0,0.0,15.0,45.0,60.0,15.0,45.0,60.0,120.0,15.0,45.0,60.0};	
+	double sum=0;
+	for (int i = 0; i < 15; i++)
+	{
+			sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
+	}
+	printf("\nil valore della soluzione é: %f\n",sum);
+	int sum1=65000-SERVERSTRIAGE*1700-SERVERSRED*7000-SERVERSTRAUMA*4200-SERVERSMEDICAL*4200-SERVERSMINOR*2800;
+	printf("il Resto del budget é: %d\n",sum1);
+}
 
 void azzeraOutput(output matrix[][15],int dim){
 	for(int i=0;i<N;i++)
@@ -267,8 +279,8 @@ int main(){
 	strcpy(matrix[0][0].nome,"Triage");
 	strcpy(matrix[0][1].nome,"Codici Rossi");
 	strcpy(matrix[0][2].nome,"Traumatologia");
-	strcpy(matrix[0][3].nome,"Problemi medici");
-	strcpy(matrix[0][4].nome,"Problemi minori");
+	strcpy(matrix[0][3].nome,"Problemi minori");
+	strcpy(matrix[0][4].nome,"Problemi medici");
 	strcpy(matrix[0][5].nome,"Trauma giallo");
 	strcpy(matrix[0][6].nome,"Trauma verde");
 	strcpy(matrix[0][7].nome,"P. Minori giallo");
@@ -301,7 +313,6 @@ int main(){
 	simulatore(matrix, decessi, numBatch-1, 0);
 	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
 	media(matrix,med,12);
-	printf("coia\n");
 	varianza(matrix,med,var,omega,12);
 	
 	mediaDecessi(decessi);
@@ -315,6 +326,21 @@ int main(){
 	printf("\t*** FINITE HORIZON SIMULATION ***\n");
 	printf("\t---------------------------------\n");
 	output matrix2[N][15];
+	strcpy(matrix2[0][0].nome,"Triage");
+	strcpy(matrix2[0][1].nome,"Codici Rossi");
+	strcpy(matrix2[0][2].nome,"Traumatologia");
+	strcpy(matrix2[0][3].nome,"Problemi medici");
+	strcpy(matrix2[0][4].nome,"Problemi minori");
+	strcpy(matrix2[0][5].nome,"Trauma arancione");
+	strcpy(matrix2[0][6].nome,"Trauma blu");
+	strcpy(matrix2[0][7].nome,"Trauma verde");
+	strcpy(matrix2[0][8].nome,"P. Minori arancione");
+	strcpy(matrix2[0][9].nome,"P. Minori blu");
+	strcpy(matrix2[0][10].nome,"P. Minori verde");
+	strcpy(matrix2[0][11].nome,"P. Minori bianco");
+	strcpy(matrix2[0][12].nome,"P. Medici arancione");
+	strcpy(matrix2[0][13].nome,"P. Medici blu");
+	strcpy(matrix2[0][14].nome,"P. Medici verde");
 	double med2[7][15];
 	double var2[7][15];
 	double omega2[7][15];
@@ -328,6 +354,7 @@ int main(){
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15);
 	mediaDecessi(decessi);
+	check1(med2);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
 	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
@@ -339,8 +366,7 @@ int main(){
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15);
 	mediaDecessi(decessi);
-	
-
+	check1(med2);
 	return 0;
 }
 
