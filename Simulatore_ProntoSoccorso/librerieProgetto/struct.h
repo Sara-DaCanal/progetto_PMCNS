@@ -18,7 +18,7 @@ typedef struct nodeData{
 } nodeData;
 
 typedef struct output{
-    char* nome;
+    char nome[128];
     double wait;
     double delay;
     double service;

@@ -98,13 +98,13 @@ void initOutputStats(nodeData *node, int dim)
 }
 
 void writeStats(output out[],nodeData appoggio,int i){
-    out[i].job+=appoggio.index;
-    out[i].wait+=(appoggio.node / appoggio.index);
-    out[i].delay+=(appoggio.queue / appoggio.index);
-    out[i].service+=(appoggio.service / appoggio.index);
-    out[i].numberNode+=(appoggio.node / (appoggio.current-appoggio.init_time));
-    out[i].numberQueue+=(appoggio.queue / (appoggio.current-appoggio.init_time));
-    out[i].utilization+=((appoggio.service/appoggio.serverNumber) / (appoggio.current-appoggio.init_time));
+    out[i].job=appoggio.index;
+    out[i].wait=(appoggio.node / appoggio.index);
+    out[i].delay=(appoggio.queue / appoggio.index);
+    out[i].service=(appoggio.service / appoggio.index);
+    out[i].numberNode=(appoggio.node / (appoggio.current-appoggio.init_time));
+    out[i].numberQueue=(appoggio.queue / (appoggio.current-appoggio.init_time));
+    out[i].utilization=((appoggio.service/appoggio.serverNumber) / (appoggio.current-appoggio.init_time));
 }
 
 //stats updater for each step

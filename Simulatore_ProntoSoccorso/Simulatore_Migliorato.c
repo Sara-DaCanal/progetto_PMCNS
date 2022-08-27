@@ -75,7 +75,7 @@ void printStats1(nodeData appoggio){
 }
 
 
-int simulatore2(output matrix[][15],int iteration, int finite){
+int simulatore2(output matrix[][15],double decessi[], int iteration, int finite){
     int currentJob[5]={0,0,0,0,0};
     int currentBatch[5]={0,0,0,0,0};
 
@@ -250,6 +250,7 @@ int simulatore2(output matrix[][15],int iteration, int finite){
             if(numJobInBatch==currentJob[1]&& currentBatch[1]<numBatch)
             {
                 writeStats(matrix[currentBatch[1]],redCodeStats,1);
+                decessi[currentBatch[1]]=decessi[currentBatch[1]]/redCodeStats.index;
                 initOutputStats(&redCodeStats,SERVERSRED);
                 initTime(&redCodeStats,t.current); 
                 currentJob[1]=0;
@@ -383,7 +384,9 @@ int simulatore2(output matrix[][15],int iteration, int finite){
                     else{
                         SelectStream(7);
                         p = Uniform(0,100);
-                        if(p<5.2){              
+                        if(p<5.2){   
+                            if(finite) decessi[iteration]++;
+                            else decessi[currentBatch[1]]++;          
                             redNumber--;
                             currentJob[1]++;
                         }
@@ -702,6 +705,7 @@ int simulatore2(output matrix[][15],int iteration, int finite){
     //debug
     writeStats(matrix[iteration],triageStats,0);
     writeStats(matrix[iteration],redCodeStats,1);
+    decessi[iteration]=decessi[iteration]/redCodeStats.index;
     writeStats(matrix[iteration],traumaStats,2);
     writeStats(matrix[iteration],minorStats,3);
     writeStats(matrix[iteration],medicalStats,4);
