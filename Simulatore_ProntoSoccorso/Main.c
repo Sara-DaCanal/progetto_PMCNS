@@ -34,7 +34,7 @@ void check(double media[7][15]){
 	}
 	printf("\nil valore della soluzione é: %f\n",sum);
 	int sum1=420-SERVERSTRIAGE*10-SERVERSRED*40-SERVERSTRAUMA*30-SERVERSMEDICAL*30-SERVERSMINOR*20;
-	printf("il Resto del budjet é: %d\n",sum1);
+	printf("il Resto del budget é: %d\n",sum1);
 }
 
 
@@ -52,6 +52,22 @@ void azzeraOutput(output matrix[][15],int dim){
 		}
 	}
 
+}
+void azzeradecessi(double decessi[]){
+	for(int i=0;i<N;i++){
+		decessi[i]=0.0;
+	}
+}
+void mediaDecessi(double decessi[]){
+	double sum=0.0;
+	int n=0;
+	for(int i=0;i<N;i++){
+		if(decessi[i]==decessi[i]){
+			sum+=decessi[i];
+			n++;
+		}
+	}
+	printf("Le morti sono in media: %f\n", sum/n);
 }
 void media(output matrix[N][15], double med[7][15],int dim)
 {
@@ -170,7 +186,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		omega[5][j]=tstar*sqrt(var[5][j])/sqrt(N-1);
 		omega[6][j]=tstar*sqrt(var[6][j])/sqrt(N-1);
 		printf("\n");
-		printf("-------------%s----------------\n",matrix[0][j].nome);
+		printf("\t------------%s------------\n",matrix[0][j].nome);
 		printf("\t wait %f ± %f\n",med[0][j],omega[0][j]);
 		printf("\t delay %f ± %f\n",med[1][j],omega[1][j]);
 		printf("\t service %f ± %f\n",med[2][j],omega[2][j]);
@@ -178,7 +194,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		printf("\t numberQueue %f ± %f\n",med[4][j],omega[4][j]);
 		printf("\t utilization %f ± %f\n",med[5][j],omega[5][j]);
 		printf("\t job %f ± %f\n",med[6][j],omega[6][j]);
-		printf("----------------------------------------\n");
+		printf("\t---------------------------------\n");
 	}
 }
 void incrementalMean(output matrix[N][15],int j, int i, output *out){
@@ -247,31 +263,33 @@ int main(){
 	printf("\t*** FINITE HORIZON SIMULATION ***\n");
 	printf("\t---------------------------------\n");
 	output matrix[N][15];
-	matrix[0][0].nome="Triage";
-	matrix[0][1].nome="Rosso";
-	matrix[0][2].nome="Trauma";
-	matrix[0][3].nome="Minor";
-	matrix[0][4].nome="Medical";
-	matrix[0][5].nome="Trauma Giallo";
-	matrix[0][6].nome="Trauma Verde";
-	matrix[0][7].nome="Minor Giallo";
-	matrix[0][8].nome="Minor Verde";
-	matrix[0][9].nome="Minor Bianco";
-	matrix[0][10].nome="Medical Giallo";
-	matrix[0][11].nome="Medical Verde";
-
+	double decessi[N];
+	strcpy(matrix[0][0].nome,"Triage");
+	strcpy(matrix[0][1].nome,"Codici Rossi");
+	strcpy(matrix[0][2].nome,"Traumatologia");
+	strcpy(matrix[0][3].nome,"Problemi medici");
+	strcpy(matrix[0][4].nome,"Problemi minori");
+	strcpy(matrix[0][5].nome,"Trauma giallo");
+	strcpy(matrix[0][6].nome,"Trauma verde");
+	strcpy(matrix[0][7].nome,"P. Minori giallo");
+	strcpy(matrix[0][8].nome,"P. Minori verde");
+	strcpy(matrix[0][9].nome,"P. Minori bianco");
+	strcpy(matrix[0][10].nome,"P. Medici giallo");
+	strcpy(matrix[0][11].nome,"P. Medici verde");
 
 	double med[7][15];
 	double var[7][15];
 	double omega[7][15];
 	PlantSeeds(SEED);
 	azzeraOutput(matrix,12);
+	azzeradecessi(decessi);
 	for(int i=0;i<N;i++){
-		simulatore(matrix,i,1);	
+		simulatore(matrix,decessi,i,1);	
 	}
 	writeFileCSV(matrix, "./statistiche/transiente.csv",12);
 	media(matrix,med,12);
 	varianza(matrix,med,var,omega,12);
+	mediaDecessi(decessi);
 	check(med);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
@@ -279,10 +297,14 @@ int main(){
 	printf("\t-----------------------------------\n");
 	PlantSeeds(SEED);
 	azzeraOutput(matrix,12);
-	simulatore(matrix, numBatch-1, 0);
+	azzeradecessi(decessi);
+	simulatore(matrix, decessi, numBatch-1, 0);
 	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
 	media(matrix,med,12);
+	printf("coia\n");
 	varianza(matrix,med,var,omega,12);
+	
+	mediaDecessi(decessi);
 	check(med);
 
 
@@ -298,22 +320,25 @@ int main(){
 	double omega2[7][15];
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
+	azzeradecessi(decessi);
 	for(int i=0;i<N;i++){
-		simulatore2(matrix2,i,1);	
+		simulatore2(matrix2,decessi,i,1);	
 	}
 	writeFileCSV(matrix2, "./statistiche/transiente_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15);
+	mediaDecessi(decessi);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
 	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
 	printf("\t-----------------------------------\n");
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
-	simulatore2(matrix2, numBatch-1, 0);
+	simulatore2(matrix2, decessi, numBatch-1, 0);
 	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15);
+	mediaDecessi(decessi);
 	
 
 	return 0;
