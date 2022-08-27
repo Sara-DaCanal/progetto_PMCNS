@@ -21,6 +21,23 @@
 #include "librerieProgetto/utils.h"
 #include "Simulatore.h"
 
+
+
+void check(double media[7][15]){
+
+	double vettorePesi[12]={1.0,4.0,0.0,0.0,0.0,3.0,3.0,2.0,2.0,2.0,3.0,3.0};
+	double vettoreTempiPrevisti[12]={3.0,0.0,0.0,0.0,0.0,30.0,60.0,30.0,60.0,120.0,30.0,60.0};	
+	double sum=0;
+	for (int i = 0; i < 12; i++)
+	{
+			sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
+	}
+	printf("\nil valore della soluzione é: %f\n",sum);
+	int sum1=420-SERVERSTRIAGE*10-SERVERSRED*40-SERVERSTRAUMA*30-SERVERSMEDICAL*30-SERVERSMINOR*20;
+	printf("il Resto del budjet é: %d\n",sum1);
+}
+
+
 void azzeraOutput(output matrix[][15],int dim){
 	for(int i=0;i<N;i++)
 	{
@@ -153,6 +170,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		omega[5][j]=tstar*sqrt(var[5][j])/sqrt(N-1);
 		omega[6][j]=tstar*sqrt(var[6][j])/sqrt(N-1);
 		printf("\n");
+		printf("-------------%s----------------\n",matrix[0][j].nome);
 		printf("\t wait %f ± %f\n",med[0][j],omega[0][j]);
 		printf("\t delay %f ± %f\n",med[1][j],omega[1][j]);
 		printf("\t service %f ± %f\n",med[2][j],omega[2][j]);
@@ -160,6 +178,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		printf("\t numberQueue %f ± %f\n",med[4][j],omega[4][j]);
 		printf("\t utilization %f ± %f\n",med[5][j],omega[5][j]);
 		printf("\t job %f ± %f\n",med[6][j],omega[6][j]);
+		printf("----------------------------------------\n");
 	}
 }
 void incrementalMean(output matrix[N][15],int j, int i, output *out){
@@ -228,6 +247,20 @@ int main(){
 	printf("\t*** FINITE HORIZON SIMULATION ***\n");
 	printf("\t---------------------------------\n");
 	output matrix[N][15];
+	matrix[0][0].nome="Triage";
+	matrix[0][1].nome="Rosso";
+	matrix[0][2].nome="Trauma";
+	matrix[0][3].nome="Minor";
+	matrix[0][4].nome="Medical";
+	matrix[0][5].nome="Trauma Giallo";
+	matrix[0][6].nome="Trauma Verde";
+	matrix[0][7].nome="Minor Giallo";
+	matrix[0][8].nome="Minor Verde";
+	matrix[0][9].nome="Minor Bianco";
+	matrix[0][10].nome="Medical Giallo";
+	matrix[0][11].nome="Medical Verde";
+
+
 	double med[7][15];
 	double var[7][15];
 	double omega[7][15];
@@ -239,6 +272,7 @@ int main(){
 	writeFileCSV(matrix, "./statistiche/transiente.csv",12);
 	media(matrix,med,12);
 	varianza(matrix,med,var,omega,12);
+	check(med);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
 	printf("\t*** INFINITE HORIZON SIMULATION ***\n");
@@ -249,6 +283,7 @@ int main(){
 	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
 	media(matrix,med,12);
 	varianza(matrix,med,var,omega,12);
+	check(med);
 
 
 
@@ -279,6 +314,8 @@ int main(){
 	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15);
+	
+
 	return 0;
 }
 

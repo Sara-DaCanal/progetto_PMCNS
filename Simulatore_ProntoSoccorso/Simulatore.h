@@ -10,6 +10,12 @@
 #include <stdio.h>
 #define SEED 123456789
 
+#define SERVERSTRIAGE 2 // 2 or 3
+#define SERVERSRED 2
+#define SERVERSTRAUMA 3   
+#define SERVERSMEDICAL 3    
+#define SERVERSMINOR 7
+
 int simulatore(output matrix[][15], int iteration, int finite);
 int simulatore2(output matrix[][15], int iteration, int finite);
 

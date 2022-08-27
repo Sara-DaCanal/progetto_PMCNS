@@ -4,6 +4,8 @@
 //@name change
 #ifndef struct_h
 #define struct_h 
+#include <string.h>
+
 
 typedef struct nodeData{
     double node;                    /* time integrated number in the node  */
@@ -16,6 +18,7 @@ typedef struct nodeData{
 } nodeData;
 
 typedef struct output{
+    char* nome;
     double wait;
     double delay;
     double service;

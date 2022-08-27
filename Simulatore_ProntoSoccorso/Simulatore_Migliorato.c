@@ -26,12 +26,6 @@
 #include "librerieProgetto/utils.h"
 
 
-//size in # of servers, for each node
-#define SERVERSTRIAGE 2
-#define SERVERSRED 2
-#define SERVERSTRAUMA 3    
-#define SERVERSMEDICAL 4    
-#define SERVERSMINOR 7   
 
 //simulation variables
 double arrival; 
@@ -199,6 +193,7 @@ int simulatore2(output matrix[][15],int iteration, int finite){
             3:  Minor
             4:  Medical
         */
+
         t.next=getSpecificMin(t.arrival, triage, SERVERSTRIAGE);
         t.next=getSpecificMin(t.next, redCode, SERVERSRED);
         t.next=getSpecificMin(t.next, trauma, SERVERSTRAUMA); 
@@ -548,8 +543,8 @@ int simulatore2(output matrix[][15],int iteration, int finite){
                     minorWhiteNumber++;
                     minorStats.index++;
                     whiteMinorStats.index++;
-                    if(!finite && currentJob[2]>=numJobInBatch) minorStats.index--;
-                    if(!finite && currentJob[2]>=numJobInBatch) whiteMinorStats.index--;
+                    if(!finite && currentJob[3]>=numJobInBatch) minorStats.index--;
+                    if(!finite && currentJob[3]>=numJobInBatch) whiteMinorStats.index--;
                     if(minorOrangeNumber+minorBlueNumber+minorGreenNumber+minorWhiteNumber<=SERVERSMINOR){
                         if((minorOrangeNumber-minorInServiceOrange==0 && minorBlueNumber-minorInServiceBlue==0) && (minorGreenNumber-minorInServiceGreen==0)){
                             minorInServiceWhite++;
@@ -703,7 +698,7 @@ int simulatore2(output matrix[][15],int iteration, int finite){
             }
 
     }
-    
+
     //debug
     writeStats(matrix[iteration],triageStats,0);
     writeStats(matrix[iteration],redCodeStats,1);
@@ -720,6 +715,5 @@ int simulatore2(output matrix[][15],int iteration, int finite){
     writeStats(matrix[iteration],orangeMedicalStats,12);
     writeStats(matrix[iteration],blueMedicalStats,13);
     writeStats(matrix[iteration],greenMedicalStats,14);
-
     return 0;
 }
