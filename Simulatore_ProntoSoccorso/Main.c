@@ -25,7 +25,7 @@
 
 void check(double media[7][15]){
 
-	double vettorePesi[12]={1.0,4.0,0.0,0.0,0.0,3.0,3.0,2.0,2.0,2.0,3.0,3.0};
+	double vettorePesi[12]={3.0,10.0,0.0,0.0,0.0,4.0,2.0,3.0,2.0,1.0,4.0,2.0};
 	double vettoreTempiPrevisti[12]={3.0,0.0,0.0,0.0,0.0,30.0,60.0,30.0,60.0,120.0,30.0,60.0};	
 	double sum=0;
 	for (int i = 0; i < 12; i++)
