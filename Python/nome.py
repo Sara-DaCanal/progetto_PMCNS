@@ -5,6 +5,7 @@ import os
 import sys
 import csv
 
+
 theoricDelay=[2.5392,2.27991,27.05871,33.4121,73.32531,12.70077,31.41034,8.28938,16.6594,69.7234,23.82312,88.32865]
 theoricWait=[12.5392,227.77991,120.45871,138.7221,239.22531,106.10077,122.81034,115.0,120,180,189.72312,254.22865]
 theoricService=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
@@ -12,8 +13,159 @@ theoricNum_node=[]
 theoricNum_Queue=[]
 theoricRho=[0.45,0.10,0.59565,0.790137,0.73029,0.23259,0.45711,0.12139,0.40052,0.26946,0.16986,0.56043]
 theoricJob=[]
+
+
 pathTransiente="./../Simulatore_ProntoSoccorso/statistiche/transiente.csv"
 pathStazionario="./../Simulatore_ProntoSoccorso/statistiche/steady_state.csv"
+
+
+
+DueDelay=[3.0,0.0,0.0,0.0,0.0,30.0,60.0,30.0,60.0,120.0,30.0,60.0]
+def graficiPrimaParte(path):
+	csvFile = open(path,newline="\n")
+	spamreader = csv.reader(csvFile, delimiter=',');
+	delay=[];
+	wait=[];
+	service=[];
+	num_node=[];
+	num_queue=[];
+	rho=[];
+	job=[];
+	delay.append([])
+	wait.append([])
+	service.append([])
+	num_node.append([])
+	num_queue.append([])
+	rho.append([])
+	job.append([])
+	k=0
+	count=0;
+	for i in spamreader:
+		if count!=0:
+			if int(i[0])!=k:
+				k=k+1
+				delay.append([])
+				wait.append([])
+				service.append([])
+				num_node.append([])
+				num_queue.append([])
+				rho.append([])
+				job.append([])
+			wait[k].append(float(i[2]))
+			delay[k].append(float(i[3]))
+			service[k].append(float(i[4]))
+			num_node[k].append(float(i[5]))
+			num_queue[k].append(float(i[6]))
+			rho[k].append(float(i[7]))
+			job[k].append(float(i[8]))
+		count=count+1
+
+	ax=plt.subplot(1,1,1);
+	plt.title("Delay Triage")
+	plt.plot(delay[0],"or--",label='triage');
+	plt.plot([DueDelay[0]]*64,"k-",label='Due Delay')
+	#plt.plot([theoricDelay[0]]*64,"c-",label='theorical delay')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.show()
+
+	ax=plt.subplot(1,1,1);
+	plt.title("Delay RedCode")
+	plt.plot(delay[1],"or--",label='redCode');
+	plt.plot([DueDelay[1]]*64,"k-",label='Due Delay')
+	#plt.plot([theoricDelay[1]]*64,"c-",label='theorical delay')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+
+	plt.show()
+
+	ax=plt.subplot(2,1,1);
+	plt.title("Delay Trauma")
+	plt.plot(delay[5],"oy--",label='Trauma Yellow');
+	plt.plot([DueDelay[5]]*64,"k-",label='Due Delay yellow')
+	#plt.plot([theoricDelay[5]]*64,"c-",label='theorical delay yellow')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')	
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+
+	ax=plt.subplot(2,1,2);
+	plt.plot(delay[6],"og--",label='Trauma green');
+	plt.plot([DueDelay[6]]*64,"k-",label='Due Delay green')
+	#plt.plot([theoricDelay[6]]*64,"c-",label='theorical delay green')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.show()
+
+	ax=plt.subplot(2,1,1);
+	plt.title("Delay Medical")
+	plt.plot(delay[10],"oy--",label='Medical Yellow');
+	plt.plot([DueDelay[10]]*64,"k-",label='Due Delay yellow')
+	#plt.plot([theoricDelay[10]]*64,"c-",label='theorical delay yellow')	
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	
+	ax=plt.subplot(2,1,2);
+	plt.plot(delay[11],"og--",label='Medical green');
+	plt.plot([DueDelay[11]]*64,"k-",label='Due Delay green')
+	#plt.plot([theoricDelay[11]]*64,"c-",label='theorical delay green')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.show()
+
+	ax=plt.subplot(3,1,1);
+	plt.title("Delay Minor")
+	plt.plot(delay[7],"oy--",label='Minor Yellow');
+	plt.plot([DueDelay[7]]*64,"k-",label='Due Delay yellow')
+	#plt.plot([theoricDelay[7]]*64,"c-",label='theorical delay yellow')	
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	
+	ax=plt.subplot(3,1,2);
+	plt.plot(delay[8],"og--",label='Minor green');
+	plt.plot([DueDelay[8]]*64,"k-",label='Due Delay green')
+	#plt.plot([theoricDelay[8]]*64,"c-",label='theorical delay green')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+
+
+	ax=plt.subplot(3,1,3);
+	plt.plot(delay[9],"o--",color="grey",label='Minor white');
+	plt.plot([DueDelay[9]]*64,"k-",label='Due Delay white')
+	#plt.plot([theoricDelay[9]]*64,"c-",label='theorical delay white')
+	plt.xlabel('Batch')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.show()
+
+	
+	'''
+	ax=plt.title("Delay RedCode")
+	plt.plot(delay[1],"or--",label='redCode');
+	plt.plot([DueDelay[1]]*64,"k-",label='Due Delay')
+	plt.plot([theoricDelay[1]]*64,"c-",color="y",label='theorical Wait')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(1, 0.5))
+
+	ax=plt.title("Delay Triage")
+	plt.plot(delay[0],"or--",label='triage');
+	plt.plot([DueDelay[0]]*64,"k-",label='Due Delay')
+	plt.plot([theoricDelay[0]]*64,"c-",color="y",label='theorical Wait')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(1, 0.5))
+
+	ax=plt.title("Delay RedCode")
+	plt.plot(delay[1],"or--",label='redCode');
+	plt.plot([DueDelay[1]]*64,"k-",label='Due Delay')
+	plt.plot([theoricDelay[1]]*64,"c-",color="y",label='theorical Wait')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(1, 0.5))
+	'''
+
 def grafici(path):
 	csvFile = open(path,newline="\n")
 	spamreader = csv.reader(csvFile, delimiter=',');
@@ -24,7 +176,6 @@ def grafici(path):
 	num_queue=[];
 	rho=[];
 	job=[];
-
 	delay.append([])
 	wait.append([])
 	service.append([])
@@ -82,12 +233,10 @@ def grafici(path):
 		ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(1, 0.5))
 		
 		plt.show()
-		
-grafici(pathTransiente)
-grafici(pathStazionario)
-'''
-x=f.read().split()
-for string in x:
-	print("stringa singola")
-	print(string.split())
-'''
+
+
+
+
+graficiPrimaParte(pathStazionario);
+#grafici(pathTransiente)
+#grafici(pathStazionario)
