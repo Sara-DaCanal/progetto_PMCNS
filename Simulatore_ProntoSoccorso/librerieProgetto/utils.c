@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../libreriaRand/rngs.h"
+#include "rngs.h"
 #include "struct.h"
 #include "utils.h"
 

@@ -14,9 +14,9 @@
 #include <errno.h>
 #include <dirent.h>
 
-#include "Main.h"
-#include "libreriaRand/rngs.h" //spostare le librerie
-#include "libreriaRand/rvms.h" 
+//#include "Main.h"
+#include "librerieProgetto/rngs.h" //spostare le librerie
+#include "librerieProgetto/rvms.h" 
 #include "librerieProgetto/struct.h"
 #include "librerieProgetto/utils.h"
 #include "Simulatore.h"
@@ -329,8 +329,8 @@ int main(){
 	strcpy(matrix2[0][0].nome,"Triage");
 	strcpy(matrix2[0][1].nome,"Codici Rossi");
 	strcpy(matrix2[0][2].nome,"Traumatologia");
-	strcpy(matrix2[0][3].nome,"Problemi medici");
-	strcpy(matrix2[0][4].nome,"Problemi minori");
+	strcpy(matrix2[0][3].nome,"Problemi minori");
+	strcpy(matrix2[0][4].nome,"Problemi medici");
 	strcpy(matrix2[0][5].nome,"Trauma arancione");
 	strcpy(matrix2[0][6].nome,"Trauma blu");
 	strcpy(matrix2[0][7].nome,"Trauma verde");

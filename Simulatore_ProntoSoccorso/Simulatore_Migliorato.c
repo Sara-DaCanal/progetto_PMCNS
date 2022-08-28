@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "libreriaRand/rngs.h"
+#include "librerieProgetto/rngs.h"
 #include "librerieProgetto/struct.h"
 #include "Simulatore.h"
 #include "librerieProgetto/utils.h"
