@@ -5,7 +5,7 @@
 #define STOP 1440.0
 #define INF pow(1.79769, 308.0)
 #define numBatch 64
-#define numJobInBatch 512
+#define numJobInBatch 1024
 #define N 64
 #define ALFA 0.05
 

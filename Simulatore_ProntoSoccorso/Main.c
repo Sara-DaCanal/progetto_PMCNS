@@ -30,7 +30,7 @@ void check(double media[7][15]){
 	double sum=0;
 	for (int i = 0; i < 12; i++)
 	{
-			sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
+			if(-media[1][i]+vettoreTempiPrevisti[i]<=0)	sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
 	}
 	printf("\nil valore della soluzione é: %f\n",sum);
 	int sum1=65000-SERVERSTRIAGE*1700-SERVERSRED*7000-SERVERSTRAUMA*4200-SERVERSMEDICAL*4200-SERVERSMINOR*2800;
@@ -43,7 +43,7 @@ void check1(double media[7][15]){
 	double sum=0;
 	for (int i = 0; i < 15; i++)
 	{
-			sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
+			if(-media[1][i]+vettoreTempiPrevisti[i]<=0)sum += vettorePesi[i]*(-media[1][i]+vettoreTempiPrevisti[i]);
 	}
 	printf("\nil valore della soluzione é: %f\n",sum);
 	int sum1=65000-SERVERSTRIAGE*1700-SERVERSRED*7000-SERVERSTRAUMA*4200-SERVERSMEDICAL*4200-SERVERSMINOR*2800;
@@ -136,9 +136,27 @@ void media(output matrix[N][15], double med[7][15],int dim)
 	}
 }
 
-void varianza(output matrix[][15],double med[7][15],double var[7][15],double omega[7][15],int dim)
+void varianza(output matrix[][15],double med[7][15],double var[7][15],double omega[7][15],int dim,char * path)
 {
 	double tstar=idfStudent(N-1,1-ALFA/2);
+	DIR *dir=opendir("./statistiche");
+	if(dir){
+		closedir(dir);
+	}
+	else if(ENOENT==errno){
+		if(mkdir("./statistiche",0777)<0)
+		{
+			printf("error\n");
+			exit(-1);
+		}
+	}
+	FILE* file=fopen(path,"w+");
+	if(file==NULL)
+	{
+		printf("error\n");
+		exit(-1);
+	}
+	fprintf(file, "nodo,wait,delay,service,n_node,n_queue,rho,job\n");
 	double somma1[dim];
 	double somma2[dim];
 	double somma3[dim];
@@ -197,6 +215,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		omega[4][j]=tstar*sqrt(var[4][j])/sqrt(N-1);
 		omega[5][j]=tstar*sqrt(var[5][j])/sqrt(N-1);
 		omega[6][j]=tstar*sqrt(var[6][j])/sqrt(N-1);
+		fprintf(file,"%s,%f,%f,%f,%f,%f,%f,%f\n",matrix[0][j].nome,omega[0][j],omega[1][j],omega[2][j],omega[3][j],omega[4][j],omega[5][j],omega[6][j]);
 		printf("\n");
 		printf("\t------------%s------------\n",matrix[0][j].nome);
 		printf("\t wait %f ± %f\n",med[0][j],omega[0][j]);
@@ -208,6 +227,7 @@ void varianza(output matrix[][15],double med[7][15],double var[7][15],double ome
 		printf("\t job %f ± %f\n",med[6][j],omega[6][j]);
 		printf("\t---------------------------------\n");
 	}
+	fclose(file);
 }
 void incrementalMean(output matrix[N][15],int j, int i, output *out){
 	double sum_w=0.0;
@@ -288,7 +308,6 @@ int main(){
 	strcpy(matrix[0][9].nome,"P. Minori bianco");
 	strcpy(matrix[0][10].nome,"P. Medici giallo");
 	strcpy(matrix[0][11].nome,"P. Medici verde");
-
 	double med[7][15];
 	double var[7][15];
 	double omega[7][15];
@@ -300,7 +319,7 @@ int main(){
 	}
 	writeFileCSV(matrix, "./statistiche/transiente.csv",12);
 	media(matrix,med,12);
-	varianza(matrix,med,var,omega,12);
+	varianza(matrix,med,var,omega,12,"./statistiche/intervalli_di_confidenzaFinite.csv");
 	mediaDecessi(decessi);
 	check(med);
 	//simulazione dello stazionario
@@ -313,7 +332,7 @@ int main(){
 	simulatore(matrix, decessi, numBatch-1, 0);
 	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
 	media(matrix,med,12);
-	varianza(matrix,med,var,omega,12);
+	varianza(matrix,med,var,omega,12,"./statistiche/intervalli_di_confidenzainFinite.csv");
 	
 	mediaDecessi(decessi);
 	check(med);
@@ -348,11 +367,11 @@ int main(){
 	azzeraOutput(matrix2,15);
 	azzeradecessi(decessi);
 	for(int i=0;i<N;i++){
-		simulatore2(matrix2,decessi,i,1);	
+		simulatore2(matrix2,decessi,i,1,6.0);	
 	}
 	writeFileCSV(matrix2, "./statistiche/transiente_migliorato.csv",15);
 	media(matrix2,med2,15);
-	varianza(matrix2,med2,var2,omega2,15);
+	varianza(matrix2,med2,var2,omega2,15,"./statistiche/intervalli_di_confidenzaFiniteMigliorato.csv");
 	mediaDecessi(decessi);
 	check1(med2);
 	//simulazione dello stazionario
@@ -361,10 +380,10 @@ int main(){
 	printf("\t-----------------------------------\n");
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
-	simulatore2(matrix2, decessi, numBatch-1, 0);
+	simulatore2(matrix2, decessi, numBatch-1, 0,6.0);
 	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
 	media(matrix2,med2,15);
-	varianza(matrix2,med2,var2,omega2,15);
+	varianza(matrix2,med2,var2,omega2,15,"./statistiche/intervalli_di_confidenzaInFiniteMigliorato.csv");
 	mediaDecessi(decessi);
 	check1(med2);
 	return 0;

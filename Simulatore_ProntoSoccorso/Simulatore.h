@@ -17,6 +17,6 @@
 #define SERVERSMINOR 6
 
 int simulatore(output matrix[][15], double decessi[], int iteration, int finite);
-int simulatore2(output matrix[][15], double decessi[], int iteration, int finite);
+int simulatore2(output matrix[][15], double decessi[], int iteration, int finite,float probability);
 
 #endif

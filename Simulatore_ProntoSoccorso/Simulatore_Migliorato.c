@@ -75,7 +75,7 @@ void printStats1(nodeData appoggio){
 }
 
 
-int simulatore2(output matrix[][15],double decessi[], int iteration, int finite){
+int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,float probability){
     int currentJob[5]={0,0,0,0,0};
     int currentBatch[5]={0,0,0,0,0};
 
@@ -396,7 +396,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite)
                 case yellow:
                     SelectStream(10);
                     p=Uniform(0,100);
-                    if(p<50) //TO-DO decidere la probabilità di essere arancioni o blu
+                    if(p<probability) //TO-DO decidere la probabilità di essere arancioni o blu
                     {
                         //orange
                         SelectStream(8);    
@@ -443,7 +443,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite)
                     }
                     else{
                         //blue
-                        SelectStream(11); 
+                        SelectStream(8); 
                         p = Uniform(0,100);
                         if(p<26.7){          
                             traumaBlueNumber++;
