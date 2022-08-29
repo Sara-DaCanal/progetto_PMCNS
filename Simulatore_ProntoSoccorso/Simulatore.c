@@ -365,7 +365,11 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, yellow); 
                             t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                         }
+<<<<<<< HEAD
                         else{
+=======
+                       else{
+>>>>>>> e3df6d858b520940e6f43a70ddaef1b7d3bc8657
                             SelectStream(10);
                             p = Uniform(0,1);
                             if(p<probability){
@@ -394,7 +398,11 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, yellow); 
                             t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                         }
+<<<<<<< HEAD
                         else{
+=======
+                       else{
+>>>>>>> e3df6d858b520940e6f43a70ddaef1b7d3bc8657
                             SelectStream(10);
                             p = Uniform(0,1);
                             if(p<probability){
@@ -422,7 +430,11 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, yellow); 
                             t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                         }
+<<<<<<< HEAD
                         else{
+=======
+                       else{
+>>>>>>> e3df6d858b520940e6f43a70ddaef1b7d3bc8657
                             SelectStream(10);
                             p = Uniform(0,1);
                             if(p<probability){
