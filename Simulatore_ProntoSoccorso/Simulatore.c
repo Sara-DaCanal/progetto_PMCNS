@@ -380,8 +380,8 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                                     currentJob[2]++;
                                 }
                             }
-                        }
-                    }*/
+                        }*/
+                    }
                     else if(p<51.4){         
                         medicalYellowNumber++;
                         medicalStats.index++;
@@ -436,8 +436,8 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                                     currentJob[3]++;
                                 }
                             }
-                        }
-                    }*/
+                        }*/
+                    }
                     break;
 
                 case green:
