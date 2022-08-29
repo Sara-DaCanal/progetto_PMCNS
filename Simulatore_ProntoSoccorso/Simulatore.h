@@ -16,7 +16,7 @@
 #define SERVERSMEDICAL 4   
 #define SERVERSMINOR 6
 
-int simulatore(output matrix[][15], double decessi[], int iteration, int finite);
+int simulatore(output matrix[][15], double decessi[], int iteration, int finite, float probability);
 int simulatore2(output matrix[][15], double decessi[], int iteration, int finite,float probability);
 
 #endif

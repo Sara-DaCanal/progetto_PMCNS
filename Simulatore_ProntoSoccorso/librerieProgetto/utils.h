@@ -8,6 +8,7 @@
 #define numJobInBatch 1024
 #define N 64
 #define ALFA 0.05
+#define p_arancione 0.367879
 
 double Exponential(double m);
 double Uniform(double a, double b);

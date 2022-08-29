@@ -315,7 +315,7 @@ int main(){
 	azzeraOutput(matrix,12);
 	azzeradecessi(decessi);
 	for(int i=0;i<N;i++){
-		simulatore(matrix,decessi,i,1);	
+		simulatore(matrix,decessi,i,1, 0.367879);	
 	}
 	writeFileCSV(matrix, "./statistiche/transiente.csv",12);
 	media(matrix,med,12);
@@ -329,7 +329,7 @@ int main(){
 	PlantSeeds(SEED);
 	azzeraOutput(matrix,12);
 	azzeradecessi(decessi);
-	simulatore(matrix, decessi, numBatch-1, 0);
+	simulatore(matrix, decessi, numBatch-1, 0, 0.367879);
 	writeFileCSV(matrix, "./statistiche/steady_state.csv",12);
 	media(matrix,med,12);
 	varianza(matrix,med,var,omega,12,"./statistiche/intervalli_di_confidenzainFinite.csv");
@@ -367,7 +367,7 @@ int main(){
 	azzeraOutput(matrix2,15);
 	azzeradecessi(decessi);
 	for(int i=0;i<N;i++){
-		simulatore2(matrix2,decessi,i,1,6.0);	
+		simulatore2(matrix2,decessi,i,1,0.367879);	
 	}
 	writeFileCSV(matrix2, "./statistiche/transiente_migliorato.csv",15);
 	media(matrix2,med2,15);
@@ -380,7 +380,7 @@ int main(){
 	printf("\t-----------------------------------\n");
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
-	simulatore2(matrix2, decessi, numBatch-1, 0,6.0);
+	simulatore2(matrix2, decessi, numBatch-1, 0,0.307879);
 	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15,"./statistiche/intervalli_di_confidenzaInFiniteMigliorato.csv");
