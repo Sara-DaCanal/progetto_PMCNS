@@ -14,6 +14,7 @@
         7:      to generate the variable that let us decide if someone in red code dies or not
         8:      to decide wich node will take someone after he gets the code color yellow or green
         9:      to generate the variable that let us decide if someone in yellow code dies or not
+        10:     to generate the variable that let us decide if someone in yellow is orange or not
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,7 +157,7 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
     initServerData(minor, SERVERSMINOR);
     initServerData(trauma, SERVERSTRAUMA);
     initServerData(redCode, SERVERSRED);
-
+    int countOrange=0;
     t.arrival=getArrival();
     t.triageCompletion=-1;
     t.redCodeCompletion=-1;
@@ -321,6 +322,7 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
 
                 color code = assignCode();
                 double p;    //p for probability stuff
+                double paranc;
 
                 /* queue assignment, based on code color */
                 switch (code){
@@ -364,14 +366,19 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                         }
                         else{
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = traumaYellowNumber-traumaInServiceYellow;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
-                                traumaYellowNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[2]]++;
-                                currentJob[2]++;
+                            SelectStream(10);
+                            p = Uniform(0,1);
+                            if(p<probability){
+                                countOrange++;
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = traumaYellowNumber-traumaInServiceYellow;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    traumaYellowNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[2]]++;
+                                    currentJob[2]++;
+                                }
                             }
                         }
                     }
@@ -388,14 +395,18 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                         }
                         else{
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = medicalYellowNumber-medicalInServiceYellow;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
-                                medicalYellowNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[4]]++;
-                                currentJob[4]++;
+                            SelectStream(10);
+                            p = Uniform(0,1);
+                            if(p<probability){
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = medicalYellowNumber-medicalInServiceYellow;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    medicalYellowNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[4]]++;
+                                    currentJob[4]++;
+                                }
                             }
                         }
                     }
@@ -412,21 +423,25 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
                             t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                         }
                         else{
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = minorYellowNumber - minorInServiceYellow;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
-                                minorYellowNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[3]]++;
-                                currentJob[3]++;
+                            SelectStream(10);
+                            p = Uniform(0,1);
+                            if(p<probability){
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = minorYellowNumber - minorInServiceYellow;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    minorYellowNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[3]]++;
+                                    currentJob[3]++;
+                                }
                             }
                         }
                     }
                     break;
 
                 case green:
-                    SelectStream(9);
+                    SelectStream(8);
                     p = Uniform(0,100);
                     if(p<26.7){             
                         traumaGreenNumber++;
@@ -611,7 +626,7 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
     //debug
     writeStats(matrix[iteration],triageStats,0);
     writeStats(matrix[iteration],redCodeStats,1);
-    decessi[iteration]=decessi[iteration]/redCodeStats.index;
+    decessi[iteration]=decessi[iteration]/(redCodeStats.index+yellowTraumaStats.index+yellowMinorStats.index+yellowMedicalStats.index);
     writeStats(matrix[iteration],traumaStats,2);
     writeStats(matrix[iteration],minorStats,3);
     writeStats(matrix[iteration],medicalStats,4);

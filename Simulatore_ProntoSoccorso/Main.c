@@ -14,7 +14,6 @@
 #include <errno.h>
 #include <dirent.h>
 
-//#include "Main.h"
 #include "librerieProgetto/rngs.h" //spostare le librerie
 #include "librerieProgetto/rvms.h" 
 #include "librerieProgetto/struct.h"

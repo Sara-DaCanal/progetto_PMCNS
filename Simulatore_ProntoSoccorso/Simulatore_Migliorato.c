@@ -12,10 +12,10 @@
         5:      for triage arrival time generation  
         6:      to generate the code assigned to someone after he passes the triage
         7:      to generate the variable that let us decide if someone in red code dies or not
-        8:      to decide wich node will take someone after he gets the code color Orange
-        9:      to decide wich node will take someone after he gets the code color green
+        8:      to decide wich node will take someone after he gets the code color 
+        9:      to generate the variable that let us decide if someone in yellow code dies or not
         10:     to decide if an new arrival yellow is blue or orange
-        11:     to decide wich node will take someone after he gets the code color Blue
+       
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -521,7 +521,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                     }
                     break;
                 case green:
-                    SelectStream(9);
+                    SelectStream(8);
                     p = Uniform(0,100);
                     if(p<26.7){     
                         traumaGreenNumber++;
@@ -733,7 +733,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
     //debug
     writeStats(matrix[iteration],triageStats,0);
     writeStats(matrix[iteration],redCodeStats,1);
-    decessi[iteration]=decessi[iteration]/redCodeStats.index;
+    decessi[iteration]=decessi[iteration]/(redCodeStats.index+orangeTraumaStats.index+blueTraumaStats.index+orangeMedicalStats.index+orangeMinorStats.index+blueMedicalStats.index+blueMinorStats.index);
     writeStats(matrix[iteration],traumaStats,2);
     writeStats(matrix[iteration],minorStats,3);
     writeStats(matrix[iteration],medicalStats,4);
