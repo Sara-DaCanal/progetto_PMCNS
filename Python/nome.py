@@ -5,14 +5,22 @@ import os
 import sys
 import csv
 
-				
-theoricDelay=[2.5392,2.27991,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
-theoricWait=[12.5392,227.77991,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
+theoricDelay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
+theoricWait=[12.5392,228.03958,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
 theoricService=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
 theoricNum_node=[]
 theoricNum_Queue=[]
-theoricRho=[0.45,0.10,0.59184,0.790137,0.73029,0.13766,0.45418,0.12139,0.40052,0.26946,0.16986,0.56043]
+theoricRho=[0.45,0.10553,0.59184,0.790137,0.73029,0.13766,0.45418,0.12139,0.40052,0.26946,0.16986,0.56043]
 theoricJob=[]
+
+theoric2Delay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
+theoric2Wait=[12.5392,228.03958,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
+theoric2Service=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
+theoric2Num_node=[]
+theoric2Num_Queue=[]
+theoric2Rho=[0.45,0.10553,0.59184,0.790137,0.73029,0.13766,0.45418,0.12139,0.40052,0.26946,0.16986,0.56043]
+theoric2Job=[]
+
 
 
 pathTransiente="./../Simulatore_ProntoSoccorso/statistiche/transiente.csv"
@@ -301,7 +309,7 @@ def graficiIntervalConfidence(path,path2):
 		for i in range(0,64):
 			x[i]=i
 		fig, ax = plt.subplots()
-		fig.suptitle("delay "+n)
+		fig.suptitle("delay Triage"+n)
 		ax.plot(delay[k],"or--",label=n)
 		ax.plot([theoricDelay[k]]*64,"c-",label="theorical delay "+n)
 		delaym=[0]*64;
@@ -316,7 +324,7 @@ def graficiIntervalConfidence(path,path2):
 		ax.plot(delayp,"-b",label="intervalUp")
 		plt.xlabel('Batch')
 		plt.ylabel('minutes')
-		ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+		ax.legend(title='Parameter where:')
 		plt.show()
 
 		
@@ -324,7 +332,7 @@ def graficiIntervalConfidence(path,path2):
 		for i in range(0,64):
 			x[i]=i
 		fig, ax = plt.subplots()
-		fig.suptitle("rho "+n)
+		fig.suptitle("rho Triage"+n)
 		ax.plot(rho[k],"or--",label=n)
 		ax.plot([theoricRho[k]]*64,"c-",label="theorical rho "+n)
 		rhom=[0]*64;
@@ -339,7 +347,8 @@ def graficiIntervalConfidence(path,path2):
 		ax.plot(rhop,"-b",label="intervalUp")
 		plt.xlabel('Batch')
 		plt.ylabel('%')
-		ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+		ax.legend(title='Parameter where:')
+		#ax.set_ylim([0.4, 0.5])
 		plt.show()
 
 		k=k+1
