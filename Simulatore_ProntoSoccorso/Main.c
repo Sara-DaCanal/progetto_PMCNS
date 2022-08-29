@@ -286,6 +286,39 @@ void writeFileCSV(output matrix[N][15], char *path,int dim){
 	fclose(file);
 
 }
+void writeDecessiFileCSV(double morti[N],double morti2[N]){
+	DIR *dir=opendir("./statistiche");
+	if(dir){
+		closedir(dir);
+	}
+	else if(ENOENT==errno){
+		if(mkdir("./statistiche",0777)<0)
+		{
+			printf("error\n");
+			exit(-1);
+		}
+	}
+	FILE* file=fopen("./statistiche/andamentoMortalita.csv","w+");
+	if(file==NULL)
+	{
+		printf("error\n");
+		exit(-1);
+	}
+	fprintf(file, "i,normale,Migliorato,Media normale,Media Migliorato\n");
+
+	double sum=0;
+	double sum1=0;
+	for(int i=0;i<N;i++){
+		sum=sum+morti[i];
+		sum1=sum1+morti2[i];
+	}
+	for(int j=0;j<N;j++){
+		fprintf(file, "%d,%f,%f,%f,%f\n",j,morti[j],morti2[j],sum/N,sum1/N);
+	}
+	fclose(file);
+
+}
+
 
 
 int main(){ 
@@ -344,6 +377,7 @@ int main(){
 	printf("\t*** FINITE HORIZON SIMULATION ***\n");
 	printf("\t---------------------------------\n");
 	output matrix2[N][15];
+	double decessi2[N];
 	strcpy(matrix2[0][0].nome,"Triage");
 	strcpy(matrix2[0][1].nome,"Codici Rossi");
 	strcpy(matrix2[0][2].nome,"Traumatologia");
@@ -364,14 +398,14 @@ int main(){
 	double omega2[7][15];
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
-	azzeradecessi(decessi);
+	azzeradecessi(decessi2);
 	for(int i=0;i<N;i++){
-		simulatore2(matrix2,decessi,i,1,0.367879);	
+		simulatore2(matrix2,decessi2,i,1,0.367879);	
 	}
 	writeFileCSV(matrix2, "./statistiche/transiente_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15,"./statistiche/intervalli_di_confidenzaFiniteMigliorato.csv");
-	mediaDecessi(decessi);
+	mediaDecessi(decessi2);
 	check1(med2);
 	//simulazione dello stazionario
 	printf("\n\n\n\t-----------------------------------\n");
@@ -379,12 +413,13 @@ int main(){
 	printf("\t-----------------------------------\n");
 	PlantSeeds(SEED);
 	azzeraOutput(matrix2,15);
-	simulatore2(matrix2, decessi, numBatch-1, 0,0.307879);
+	simulatore2(matrix2, decessi2, numBatch-1, 0,0.307879);
 	writeFileCSV(matrix2, "./statistiche/steady_state_migliorato.csv",15);
 	media(matrix2,med2,15);
 	varianza(matrix2,med2,var2,omega2,15,"./statistiche/intervalli_di_confidenzaInFiniteMigliorato.csv");
-	mediaDecessi(decessi);
+	mediaDecessi(decessi2);
 	check1(med2);
+	writeDecessiFileCSV(decessi,decessi2);
 	return 0;
 }
 
