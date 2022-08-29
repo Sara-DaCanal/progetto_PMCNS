@@ -381,7 +381,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                     }
 
                     /*people in red code may die while waiting (if they don't get served immediately)... :( */
-                    else{
+                    /*else{
                         SelectStream(7);
                         p = Uniform(0,100);
                         int x = redNumber-SERVERSRED;
@@ -391,7 +391,7 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                             redNumber--;
                             currentJob[1]++;
                         }
-                    }
+                    }*/
                     break;
 
                 case yellow:
@@ -414,15 +414,17 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, orange); 
                                 t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                             }
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = traumaOrangeNumber-traumaInServiceOrange;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
-                                traumaOrangeNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[2]]++;
-                                currentJob[2]++;
-                            }
+                            /*else{
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = traumaOrangeNumber-traumaInServiceOrange;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    traumaOrangeNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[2]]++;
+                                    currentJob[2]++;
+                                }
+                            }*/
                         }
                         else if(p<51.4){         
                             medicalOrangeNumber++;
@@ -436,15 +438,17 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, orange); 
                                 t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                             }
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = medicalOrangeNumber-medicalInServiceOrange;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
-                                medicalOrangeNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[4]]++;
-                                currentJob[4]++;
-                            }
+                            /*else{
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = medicalOrangeNumber-medicalInServiceOrange;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    medicalOrangeNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[4]]++;
+                                    currentJob[4]++;
+                                }
+                            }*/
                         }
                         else{    
                             minorOrangeNumber++; 
@@ -458,15 +462,17 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, orange); 
                                 t.minorCompletion=NextEvent(minor, SERVERSMINOR);
                             }
-                            SelectStream(9);
-                            p = Uniform(0,100);
-                            int x = minorOrangeNumber-minorInServiceOrange;
-                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
-                                minorOrangeNumber--;
-                                if(finite) decessi[iteration]++;
-                                else decessi[currentBatch[3]]++;
-                                currentJob[3]++;
-                            }
+                            /*else{
+                                SelectStream(9);
+                                p = Uniform(0,100);
+                                int x = minorOrangeNumber-minorInServiceOrange;
+                                if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                    minorOrangeNumber--;
+                                    if(finite) decessi[iteration]++;
+                                    else decessi[currentBatch[3]]++;
+                                    currentJob[3]++;
+                                }
+                            }*/
                         }
                     }
                     else{
