@@ -384,7 +384,8 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                     else{
                         SelectStream(7);
                         p = Uniform(0,100);
-                        if(p<5.2){   
+                        int x = redNumber-SERVERSRED;
+                        if(p<((100*pow(x,2)+20*x)/(pow(x,2)+25*x+1))){  
                             if(finite) decessi[iteration]++;
                             else decessi[currentBatch[1]]++;          
                             redNumber--;
@@ -395,8 +396,8 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
 
                 case yellow:
                     SelectStream(10);
-                    p=Uniform(0,100);
-                    if(p<probability) //TO-DO decidere la probabilità di essere arancioni o blu
+                    p=Uniform(0,1);
+                    if(p<probability) 
                     {
                         //orange
                         SelectStream(8);    
@@ -413,6 +414,15 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, orange); 
                                 t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                             }
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = traumaOrangeNumber-traumaInServiceOrange;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                traumaOrangeNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[2]]++;
+                                currentJob[2]++;
+                            }
                         }
                         else if(p<51.4){         
                             medicalOrangeNumber++;
@@ -426,6 +436,15 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, orange); 
                                 t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                             }
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = medicalOrangeNumber-medicalInServiceOrange;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                medicalOrangeNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[4]]++;
+                                currentJob[4]++;
+                            }
                         }
                         else{    
                             minorOrangeNumber++; 
@@ -438,6 +457,15 @@ int simulatore2(output matrix[][15],double decessi[], int iteration, int finite,
                                 int index = FindOne(minor); //find a free server
                                 modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, orange); 
                                 t.minorCompletion=NextEvent(minor, SERVERSMINOR);
+                            }
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = minorOrangeNumber-minorInServiceOrange;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)){              
+                                minorOrangeNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[3]]++;
+                                currentJob[3]++;
                             }
                         }
                     }

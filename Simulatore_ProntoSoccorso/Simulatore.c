@@ -12,8 +12,8 @@
         5:      for triage arrival time generation  
         6:      to generate the code assigned to smeone after he passes the triage
         7:      to generate the variable that let us decide if someone in red code dies or not
-        8:      to decide wich node will take someone after he gets the code color yellow
-        9:      to decide wich node will take someone after he gets the code color green
+        8:      to decide wich node will take someone after he gets the code color yellow or green
+        9:      to generate the variable that let us decide if someone in yellow code dies or not
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,7 +75,7 @@ void printStats(nodeData appoggio){
 }
 
 
-int simulatore(output matrix[][15],double decessi[], int iteration, int finite){
+int simulatore(output matrix[][15],double decessi[], int iteration, int finite, float probability){
     int currentJob[5]={0,0,0,0,0};
     int currentBatch[5]={0,0,0,0,0};
 
@@ -338,7 +338,8 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite){
                     else{
                         SelectStream(7);
                         p = Uniform(0,100);
-                        if(p<5.2){              
+                        int x = redNumber-SERVERSRED;
+                        if(p<((100*pow(x,2)+20*x)/(pow(x,2)+25*x+1))){              
                             redNumber--;
                             if(finite) decessi[iteration]++;
                             else decessi[currentBatch[1]]++;
@@ -362,6 +363,17 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite){
                             modifyServerDataColor(&trauma[index], t.current+getService(traumaParams), 1, yellow); 
                             t.traumaCompletion=NextEvent(trauma, SERVERSTRAUMA);
                         }
+                        else{
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = traumaYellowNumber-traumaInServiceYellow;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
+                                traumaYellowNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[2]]++;
+                                currentJob[2]++;
+                            }
+                        }
                     }
                     else if(p<51.4){         
                         medicalYellowNumber++;
@@ -375,6 +387,17 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite){
                             modifyServerDataColor(&medical[index], t.current+getService(medicalParams), 1, yellow); 
                             t.medicalCompletion=NextEvent(medical, SERVERSMEDICAL);
                         }
+                        else{
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = medicalYellowNumber-medicalInServiceYellow;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
+                                medicalYellowNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[4]]++;
+                                currentJob[4]++;
+                            }
+                        }
                     }
                     else{    
                         minorYellowNumber++; 
@@ -387,6 +410,17 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite){
                             int index = FindOne(minor); //find a free server
                             modifyServerDataColor(&minor[index], t.current+getService(minorParams), 1, yellow); 
                             t.minorCompletion=NextEvent(minor, SERVERSMINOR);
+                        }
+                        else{
+                            SelectStream(9);
+                            p = Uniform(0,100);
+                            int x = minorYellowNumber - minorInServiceYellow;
+                            if(p<(100*pow(x,2)+5*x)/(pow(x,2)+33*x+1)*probability){              
+                                minorYellowNumber--;
+                                if(finite) decessi[iteration]++;
+                                else decessi[currentBatch[3]]++;
+                                currentJob[3]++;
+                            }
                         }
                     }
                     break;
