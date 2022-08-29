@@ -9,7 +9,7 @@
 
 /*  USED STREAMS:
         0-4:    for each service completion random generation
-        5:      for triage arrival time generation  
+        22 (ex 5):      for triage arrival time generation  
         6:      to generate the code assigned to smeone after he passes the triage
         7:      to generate the variable that let us decide if someone in red code dies or not
         8:      to decide wich node will take someone after he gets the code color yellow or green
@@ -57,7 +57,7 @@ double getArrival(){
  * return the next arrival time
  * ----------------------------
  */
-    SelectStream(5);
+    SelectStream(22);
     arrival+=Exponential(1/0.09);
     return arrival;
 }
@@ -269,7 +269,7 @@ int simulatore(output matrix[][15],double decessi[], int iteration, int finite, 
             if(numJobInBatch==currentJob[4] && currentBatch[4]<numBatch)
             {
                 
-                 //total
+                //total
                 writeStats(matrix[currentBatch[4]],medicalStats,4);
                 initOutputStats(&medicalStats,SERVERSMEDICAL);
                 initTime(&medicalStats,t.current);
