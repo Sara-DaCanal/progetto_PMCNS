@@ -56,7 +56,7 @@ double getArrival1(){
  * return the next arrival time
  * ----------------------------
  */
-    SelectStream(5);
+    SelectStream(22);
     arrival+=Exponential(1/0.09);
     return arrival;
 }

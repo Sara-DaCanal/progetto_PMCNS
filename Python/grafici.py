@@ -353,7 +353,7 @@ def graficiIntervalConfidence(path,path2):
 
 		k=k+1
 
-graficiIntervalConfidence(pathStazionario,pathStazionarioConfidenza)
+#graficiIntervalConfidence(pathStazionario,pathStazionarioConfidenza)
 #graficiPrimaParte(pathStazionario);
 #grafici(pathTransiente)
 #grafici(pathStazionario)
