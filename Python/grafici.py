@@ -5,7 +5,7 @@ import os
 import sys
 import csv
 
-NFILE=5
+NFILE=64
 theoricDelay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
 theoricWait=[12.5392,228.03958,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
 theoricService=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
@@ -440,10 +440,106 @@ def grafici2LaVendetta(path):
 					delay[k][11].append(float(i[4]))
 					rho[k][11].append(float(i[8]))
 			count=count+1
-
+	minDim=len(wait[0][0])
+	for i in range(0,64):
+		if minDim>len(wait[i][0]):
+			minDim=len(wait[i][0])
+	print(minDim)
+	
 	vettoreReparti=["Triage","Codice Rosso","Traumatologia","Problemi medici","Problemi minori","Trauma giallo","Trauma verde","P.medici giallo","P.medici verde","P.minori giallo","P.minori verede","P.miori bianco"]
-	max_number = max([len(wait[0][0]),len(wait[1][0]),len(wait[2][0]),len(wait[3][0]),len(wait[4][0])])
-	print(max_number)
+	
+	vettoreDelay=[]
+	for k in range(0,12):
+		vettoreDelay.append([])
+		for i in range(0,minDim):
+			sum=0;
+			for j in range(0,NFILE):
+					sum+=delay[j][k][i]
+			vettoreDelay[k].append(sum/(64.0))
+
+	
+	ax=plt.subplot(1,1,1);
+	plt.title("Delay Triage")
+	plt.plot(vettoreDelay[0],"r-",label='triage')
+	plt.plot([DueDelay[0]]*minDim,"c-",label='theorical delay')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.savefig("Delay"+vettoreReparti[0]+"3.png",format="png", dpi=150)
+	plt.show()
+
+	ax=plt.subplot(1,1,1);
+	plt.title("Delay RedCode")
+	plt.plot(vettoreDelay[1],"r-",label='redCode');
+	plt.plot([DueDelay[1]]*minDim,"k-",label='Due Delay')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.savefig("Delay"+vettoreReparti[1]+"3.png",format="png", dpi=150)
+	plt.show()
+
+	ax=plt.subplot(2,1,1);
+	plt.title("Delay Trauma")
+	plt.plot(vettoreDelay[5],"y-",label='Trauma Yellow');
+	plt.plot([DueDelay[5]]*minDim,"k-",label='Due Delay yellow')
+	plt.xlabel('job')
+	plt.ylabel('minutes')	
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+
+	ax=plt.subplot(2,1,2);
+	plt.plot(vettoreDelay[6],"g-",label='Trauma green');
+	plt.plot([DueDelay[6]]*minDim,"k-",label='Due Delay green')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.savefig("Delay"+vettoreReparti[2]+"3.png",format="png", dpi=150)
+	plt.show()
+
+	ax=plt.subplot(2,1,1);
+	plt.title("Delay Medical")
+	plt.plot(vettoreDelay[7],"y-",label='Medical Yellow');
+	plt.plot([DueDelay[10]]*minDim,"k-",label='Due Delay yellow')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	
+	ax=plt.subplot(2,1,2);
+	plt.plot(vettoreDelay[8],"g-",label='Medical green');
+	plt.plot([DueDelay[11]]*minDim,"k-",label='Due Delay green')
+
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.savefig("Delay"+vettoreReparti[3]+"3.png",format="png", dpi=150)
+	plt.show()
+
+	ax=plt.subplot(3,1,1);
+	plt.title("Delay Minor")
+	plt.plot(vettoreDelay[9],"y-",label='Minor Yellow');
+	plt.plot([DueDelay[7]]*minDim,"k-",label='Due Delay yellow')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	
+	ax=plt.subplot(3,1,2);
+	plt.plot(vettoreDelay[10],"g-",label='Minor green');
+	plt.plot([DueDelay[8]]*minDim,"k-",label='Due Delay green')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+
+
+	ax=plt.subplot(3,1,3);
+	plt.plot(vettoreDelay[11],"-",color="grey",label='Minor white');
+	plt.plot([DueDelay[9]]*minDim,"k-",label='Due Delay white')
+	plt.xlabel('job')
+	plt.ylabel('minutes')
+	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	plt.savefig("Delay"+vettoreReparti[4]+"3.png",format="png", dpi=150)
+	plt.show()
+
+
+	'''
 	for i in range(0,12):
 		plt.title("wait "+vettoreReparti[i])
 		plt.plot(wait[0][i],"r--",label='wait')
@@ -454,34 +550,35 @@ def grafici2LaVendetta(path):
 		plt.xlabel("job")
 		plt.ylabel("minutes")
 		plt.plot([theoricWait[i]]*max_number,"k-",label="theorical")
-		plt.savefig("wait"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		#plt.savefig("wait"+vettoreReparti[i]+"2.png",format="png", dpi=150)
 		plt.show()
 
 	for i in range(0,12):
 		plt.title("delay "+vettoreReparti[i])
 		plt.plot(delay[0][i],"r--",label='wait')
-		plt.plot(delay[1][i],"b--",label='wait')
-		plt.plot(delay[2][i],"g--",label='wait')
-		plt.plot(delay[3][i],"y--",label='wait')
-		plt.plot(delay[4][i],"c--",label='wait')
+		#plt.plot(delay[1][i],"b--",label='wait')
+		#plt.plot(delay[2][i],"g--",label='wait')
+		#plt.plot(delay[3][i],"y--",label='wait')
+		#plt.plot(delay[4][i],"c--",label='wait')
 		plt.ylabel("minutes")
 		plt.xlabel("job")
 		plt.plot([theoricDelay[i]]*max_number,"k-",label="theorical")
-		plt.savefig("Delay"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		#plt.savefig("Delay"+vettoreReparti[i]+"2.png",format="png", dpi=150)
 		plt.show()
 
 	for i in range(0,12):
 		plt.title("Rho "+vettoreReparti[i])
 		plt.plot(rho[0][i],"r--",label='wait')
-		plt.plot(rho[1][i],"b--",label='wait')
-		plt.plot(rho[2][i],"g--",label='wait')
-		plt.plot(rho[3][i],"y--",label='wait')
-		plt.plot(rho[4][i],"c--",label='wait')
+		#plt.plot(rho[1][i],"b--",label='wait')
+		#plt.plot(rho[2][i],"g--",label='wait')
+		#plt.plot(rho[3][i],"y--",label='wait')
+		#plt.plot(rho[4][i],"c--",label='wait')
 		plt.ylabel("minutes")
 		plt.xlabel("job")
 		plt.plot([theoricRho[i]]*max_number,"k-",label="theorical")
-		plt.savefig("rho"+vettoreReparti[i]+"2.png",format="png", dpi=150)
-		plt.show()		
+		#plt.savefig("rho"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		plt.show()
+	'''		
 
 		
 
