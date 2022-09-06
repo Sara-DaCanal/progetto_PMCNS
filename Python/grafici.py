@@ -5,12 +5,26 @@ import os
 import sys
 import csv
 
+NFILE=5
 theoricDelay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
 theoricWait=[12.5392,228.03958,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
 theoricService=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
+
+theoricDelay=[2.5392,2.53958,26.26619,73.32531,36.35195,12.43217,30.45907,23.82312,88.32865,8.28938,18.5823,75.40605]
+
+theoricWait=[12.5392,228.03958,119.66619,239.22531,141.195,105.83217,123.85907,189.72312,254.22865,113.88938,124.18230,181.00605]
+
+theoricRho=[0.45,0.10553,0.59184,0.73029,0.79137,0.13766,0.45418,0.16986,0.56043,0.12139,0.40052,0.26946]
+
+
 theoricNum_node=[]
 theoricNum_Queue=[]
 theoricRho=[0.45,0.10553,0.59184,0.790137,0.73029,0.13766,0.45418,0.12139,0.40052,0.26946,0.16986,0.56043]
+
+theoricRho=[0.45,0.10553,0.59184,0.790137,0.73029,0.13766,0.45418,0.16986,0.56043,0.12139,0.40052,0.26946]
+
+theoricRho=[0.45,0.10553,0.59184,0.73029,0.79137,0.13766,0.45418,0.16986,0.56043,0.12139,0.40052,0.26946]
+
 theoricJob=[]
 
 theoric2Delay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
@@ -28,6 +42,8 @@ pathStazionario="./../Simulatore_ProntoSoccorso/statistiche/steady_state.csv"
 pathTransienteConfidenza="./../Simulatore_ProntoSoccorso/statistiche/intervalli_di_confidenzainFinite.csv"
 pathStazionarioConfidenza="./../Simulatore_ProntoSoccorso/statistiche/intervalli_di_confidenzainFinite.csv"
 
+
+pathStazionario2="./../Simulatore_ProntoSoccorso/statistiche/pippo0.csv"
 DueDelay=[3.0,0.0,0.0,0.0,0.0,30.0,60.0,30.0,60.0,120.0,30.0,60.0]
 def graficiPrimaParte(path,confidenzaPath):
 	csvFile = open(path,newline="\n")
@@ -352,6 +368,126 @@ def graficiIntervalConfidence(path,path2):
 		plt.show()
 
 		k=k+1
+
+
+def grafici2LaVendetta(path):
+	csvFile = open(path,newline="\n")
+	spamreader = csv.reader(csvFile, delimiter=',');
+	delay=[];
+	wait=[];
+	rho=[];
+	for j in range(0,NFILE):
+		delay.append([])
+		wait.append([])
+		rho.append([])
+		for i in range(0,12):
+			delay[j].append([])
+			wait[j].append([])
+			rho[j].append([])
+	for k in range(0,NFILE):
+		path="./../Simulatore_ProntoSoccorso/statistiche/pippo"+str(k)+".csv"
+		count=0;
+		csvFile = open(path,newline="\n")
+		spamreader = csv.reader(csvFile, delimiter=',');
+		for i in spamreader:
+			if count!=0:
+				if i[0]=="Triage":
+					wait[k][0].append(float(i[3]))
+					delay[k][0].append(float(i[4]))
+					rho[k][0].append(float(i[8]))
+				if i[0]=="Codici Rossi":
+					wait[k][1].append(float(i[3]))
+					delay[k][1].append(float(i[4]))
+					rho[k][1].append(float(i[8]))
+				if i[0]=="Traumatologia":
+					wait[k][2].append(float(i[3]))
+					delay[k][2].append(float(i[4]))
+					rho[k][2].append(float(i[8]))
+				if i[0]=="Problemi medici":
+					wait[k][3].append(float(i[3]))
+					delay[k][3].append(float(i[4]))
+					rho[k][3].append(float(i[8]))
+				if i[0]=="Problemi minori":
+					wait[k][4].append(float(i[3]))
+					delay[k][4].append(float(i[4]))
+					rho[k][4].append(float(i[8]))
+				if i[0]=="Trauma giallo":
+					wait[k][5].append(float(i[3]))
+					delay[k][5].append(float(i[4]))
+					rho[k][5].append(float(i[8]))
+				if i[0]=="Trauma verde":
+					wait[k][6].append(float(i[3]))
+					delay[k][6].append(float(i[4]))
+					rho[k][6].append(float(i[8]))
+				if i[0]=="P. Medici giallo":
+					wait[k][7].append(float(i[3]))
+					delay[k][7].append(float(i[4]))
+					rho[k][7].append(float(i[8]))
+				if i[0]=="P. Medici verde":
+					wait[k][8].append(float(i[3]))
+					delay[k][8].append(float(i[4]))
+					rho[k][8].append(float(i[8]))
+				if i[0]=="P. Minori giallo":
+					wait[k][9].append(float(i[3]))
+					delay[k][9].append(float(i[4]))
+					rho[k][9].append(float(i[8]))
+				if i[0]=="P. Minori verde":
+					wait[k][10].append(float(i[3]))
+					delay[k][10].append(float(i[4]))
+					rho[k][10].append(float(i[8]))
+				if i[0]=="P. Minori bianco":
+					wait[k][11].append(float(i[3]))
+					delay[k][11].append(float(i[4]))
+					rho[k][11].append(float(i[8]))
+			count=count+1
+
+	vettoreReparti=["Triage","Codice Rosso","Traumatologia","Problemi medici","Problemi minori","Trauma giallo","Trauma verde","P.medici giallo","P.medici verde","P.minori giallo","P.minori verede","P.miori bianco"]
+	max_number = max([len(wait[0][0]),len(wait[1][0]),len(wait[2][0]),len(wait[3][0]),len(wait[4][0])])
+	print(max_number)
+	for i in range(0,12):
+		plt.title("wait "+vettoreReparti[i])
+		plt.plot(wait[0][i],"r--",label='wait')
+		plt.plot(wait[1][i],"b--",label='wait')
+		plt.plot(wait[2][i],"g--",label='wait')
+		plt.plot(wait[3][i],"y--",label='wait')
+		plt.plot(wait[4][i],"c--",label='wait')
+		plt.xlabel("job")
+		plt.ylabel("minutes")
+		plt.plot([theoricWait[i]]*max_number,"k-",label="theorical")
+		plt.savefig("wait"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		plt.show()
+
+	for i in range(0,12):
+		plt.title("delay "+vettoreReparti[i])
+		plt.plot(delay[0][i],"r--",label='wait')
+		plt.plot(delay[1][i],"b--",label='wait')
+		plt.plot(delay[2][i],"g--",label='wait')
+		plt.plot(delay[3][i],"y--",label='wait')
+		plt.plot(delay[4][i],"c--",label='wait')
+		plt.ylabel("minutes")
+		plt.xlabel("job")
+		plt.plot([theoricDelay[i]]*max_number,"k-",label="theorical")
+		plt.savefig("Delay"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		plt.show()
+
+	for i in range(0,12):
+		plt.title("Rho "+vettoreReparti[i])
+		plt.plot(rho[0][i],"r--",label='wait')
+		plt.plot(rho[1][i],"b--",label='wait')
+		plt.plot(rho[2][i],"g--",label='wait')
+		plt.plot(rho[3][i],"y--",label='wait')
+		plt.plot(rho[4][i],"c--",label='wait')
+		plt.ylabel("minutes")
+		plt.xlabel("job")
+		plt.plot([theoricRho[i]]*max_number,"k-",label="theorical")
+		plt.savefig("rho"+vettoreReparti[i]+"2.png",format="png", dpi=150)
+		plt.show()		
+
+		
+
+
+
+grafici2LaVendetta(pathStazionario2)
 
 #graficiIntervalConfidence(pathStazionario,pathStazionarioConfidenza)
 #graficiPrimaParte(pathStazionario);
