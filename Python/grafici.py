@@ -461,10 +461,10 @@ def grafici2LaVendetta(path):
 	ax=plt.subplot(1,1,1);
 	plt.title("Delay Triage")
 	plt.plot(vettoreDelay[0],"r-",label='triage')
-	plt.plot([DueDelay[0]]*minDim,"c-",label='theorical delay')
+	plt.plot([DueDelay[0]]*minDim,"k-",label='Due delay')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[0]+"3.png",format="png", dpi=150)
 	plt.show()
 
@@ -474,7 +474,7 @@ def grafici2LaVendetta(path):
 	plt.plot([DueDelay[1]]*minDim,"k-",label='Due Delay')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[1]+"3.png",format="png", dpi=150)
 	plt.show()
 
@@ -484,14 +484,14 @@ def grafici2LaVendetta(path):
 	plt.plot([DueDelay[5]]*minDim,"k-",label='Due Delay yellow')
 	plt.xlabel('job')
 	plt.ylabel('minutes')	
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 
 	ax=plt.subplot(2,1,2);
 	plt.plot(vettoreDelay[6],"g-",label='Trauma green');
 	plt.plot([DueDelay[6]]*minDim,"k-",label='Due Delay green')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[2]+"3.png",format="png", dpi=150)
 	plt.show()
 
@@ -501,7 +501,7 @@ def grafici2LaVendetta(path):
 	plt.plot([DueDelay[10]]*minDim,"k-",label='Due Delay yellow')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	
 	ax=plt.subplot(2,1,2);
 	plt.plot(vettoreDelay[8],"g-",label='Medical green');
@@ -509,7 +509,7 @@ def grafici2LaVendetta(path):
 
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[3]+"3.png",format="png", dpi=150)
 	plt.show()
 
@@ -519,14 +519,14 @@ def grafici2LaVendetta(path):
 	plt.plot([DueDelay[7]]*minDim,"k-",label='Due Delay yellow')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	
 	ax=plt.subplot(3,1,2);
 	plt.plot(vettoreDelay[10],"g-",label='Minor green');
 	plt.plot([DueDelay[8]]*minDim,"k-",label='Due Delay green')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 
 
 	ax=plt.subplot(3,1,3);
@@ -534,7 +534,7 @@ def grafici2LaVendetta(path):
 	plt.plot([DueDelay[9]]*minDim,"k-",label='Due Delay white')
 	plt.xlabel('job')
 	plt.ylabel('minutes')
-	ax.legend(title='Parameter where:',loc='center left',bbox_to_anchor=(0.8, 0.5))
+	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[4]+"3.png",format="png", dpi=150)
 	plt.show()
 
