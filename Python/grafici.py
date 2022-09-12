@@ -5,7 +5,7 @@ import os
 import sys
 import csv
 
-NFILE=64
+NFILE=5
 theoricDelay=[2.5392,2.53958,26.26619,33.4121,73.32531,12.43217,30.45907,8.28938,16.6594,69.7234,23.82312,88.32865]
 theoricWait=[12.5392,228.03958,119.66619,138.7221,239.22531,105.83217,123.85907,115.0,120,180,189.72312,254.22865]
 theoricService=[10.0,225.5,93.4,105.6,165.9,93.4,93.4,105.6,105.6,105.6,165.9,165.9]
@@ -440,14 +440,16 @@ def grafici2LaVendetta(path):
 					delay[k][11].append(float(i[4]))
 					rho[k][11].append(float(i[8]))
 			count=count+1
+	'''
 	minDim=len(wait[0][0])
 	for i in range(0,64):
 		if minDim>len(wait[i][0]):
 			minDim=len(wait[i][0])
 	print(minDim)
-	
+	'''
 	vettoreReparti=["Triage","Codice Rosso","Traumatologia","Problemi medici","Problemi minori","Trauma giallo","Trauma verde","P.medici giallo","P.medici verde","P.minori giallo","P.minori verede","P.miori bianco"]
-	
+	max_number=max(len(rho[0][2]),len(rho[1][2]),len(rho[1][2]),len(rho[1][3]),len(rho[1][4]))
+	'''
 	vettoreDelay=[]
 	for k in range(0,12):
 		vettoreDelay.append([])
@@ -456,8 +458,8 @@ def grafici2LaVendetta(path):
 			for j in range(0,NFILE):
 					sum+=delay[j][k][i]
 			vettoreDelay[k].append(sum/(64.0))
-
-	
+	'''
+	'''
 	ax=plt.subplot(1,1,1);
 	plt.title("Delay Triage")
 	plt.plot(vettoreDelay[0],"r-",label='triage')
@@ -537,8 +539,7 @@ def grafici2LaVendetta(path):
 	ax.legend(title='Parameter where:')
 	plt.savefig("Delay"+vettoreReparti[4]+"3.png",format="png", dpi=150)
 	plt.show()
-
-
+	'''
 	'''
 	for i in range(0,12):
 		plt.title("wait "+vettoreReparti[i])
@@ -565,20 +566,21 @@ def grafici2LaVendetta(path):
 		plt.plot([theoricDelay[i]]*max_number,"k-",label="theorical")
 		#plt.savefig("Delay"+vettoreReparti[i]+"2.png",format="png", dpi=150)
 		plt.show()
+		'''
 
 	for i in range(0,12):
 		plt.title("Rho "+vettoreReparti[i])
 		plt.plot(rho[0][i],"r--",label='wait')
-		#plt.plot(rho[1][i],"b--",label='wait')
-		#plt.plot(rho[2][i],"g--",label='wait')
-		#plt.plot(rho[3][i],"y--",label='wait')
-		#plt.plot(rho[4][i],"c--",label='wait')
-		plt.ylabel("minutes")
+		plt.plot(rho[1][i],"b--",label='wait')
+		plt.plot(rho[2][i],"g--",label='wait')
+		plt.plot(rho[3][i],"y--",label='wait')
+		plt.plot(rho[4][i],"c--",label='wait')
+		plt.ylabel("")
 		plt.xlabel("job")
 		plt.plot([theoricRho[i]]*max_number,"k-",label="theorical")
+		#plt.ylim([-0.1,1.0])
 		#plt.savefig("rho"+vettoreReparti[i]+"2.png",format="png", dpi=150)
-		plt.show()
-	'''		
+		plt.show()	
 
 		
 
