@@ -18,6 +18,8 @@ progetto:
 	#gcc -o P percentuale.c -Werror -Wextra -Wall -lm target/Simulatore.o target/Simulatore_Migliorato.o target/utils.o target/rngs.o target/rvms.o
 	#./P
 	gcc -o main Main.c -Werror -Wextra -Wall -lm target/Simulatore.o target/Simulatore_Migliorato.o target/utils.o target/rngs.o target/rvms.o
+	#gcc -o main updateSimulatoreGrafici.c -Werror -Wextra -Wall -lm  target/utils.o target/rngs.o target/rvms.o
+	
 	./main
 	rm main	
 	/bin/rm  -d -r target &2>/dev/null
